@@ -1,13 +1,16 @@
 ---
-doc_id: quy-dinh-04-tb1525-ve-thoi-gian-hoc-tap-va-nop-hoc-phi-hoc-ky-2-dot-2-doi-voi-hoc-vien-cao-hoc-khoa-28b-12-2025-2027
-title: TB1525 - Về thời gian học tập và nộp học phí Học kỳ 2 (Đợt 2) đối với học viên cao học Khóa 28B (12/2025-2027)
-source_url: https://www.qnu.edu.vn/vi/hoc-phi-quy-dinh/tb1525-ve-thoi-gian-hoc-tap-va-nop-hoc-phi-hoc-ky-2-dot-2-doi-voi-hoc-vien-cao-hoc-khoa-28b-12-2025-2027
-retrieved_at: 2026-08-03
-document_version: not-stated
-audience: faculty
-university: Truong Dai hoc Quy Nhon
-category: regulation
-language: vi
+doc_id: "quy-dinh-04-tb1525-ve-thoi-gian-hoc-tap-va-nop-hoc-phi-hoc-ky-2-dot-2-doi-voi-hoc-vien-cao-hoc-khoa-28b-12-2025-2027"
+title: "TB1525 - Về thời gian học tập và nộp học phí Học kỳ 2 (Đợt 2) đối với học viên cao học Khóa 28B (12/2025-2027)"
+source_url: "https://www.qnu.edu.vn/vi/hoc-phi-quy-dinh/tb1525-ve-thoi-gian-hoc-tap-va-nop-hoc-phi-hoc-ky-2-dot-2-doi-voi-hoc-vien-cao-hoc-khoa-28b-12-2025-2027"
+retrieved_at: "2026-08-03"
+document_version: "not-stated"
+audience: "student"
+university: "Trường Đại học Quy Nhơn"
+category: "regulation"
+department: "graduate-studies"
+program: "graduate"
+topic: "tuition-schedule"
+language: "vi"
 ---
 
 # TB1525 - Về thời gian học tập và nộp học phí Học kỳ 2 (Đợt 2) đối với học viên cao học Khóa 28B (12/2025-2027)

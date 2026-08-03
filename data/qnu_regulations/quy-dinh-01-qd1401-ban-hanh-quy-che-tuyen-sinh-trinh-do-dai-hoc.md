@@ -1,13 +1,16 @@
 ---
-doc_id: quy-dinh-01-qd1401-ban-hanh-quy-che-tuyen-sinh-trinh-do-dai-hoc
-title: QĐ1401 - Ban hành Quy chế tuyển sinh trình độ đại học
-source_url: https://www.qnu.edu.vn/vi/dai-hoc-chinh-quy-1764/qd1401-ban-hanh-quy-che-tuyen-sinh-trinh-do-dai-hoc
-retrieved_at: 2026-08-03
-document_version: not-stated
-audience: student
-university: Truong Dai hoc Quy Nhon
-category: regulation
-language: vi
+doc_id: "quy-dinh-01-qd1401-ban-hanh-quy-che-tuyen-sinh-trinh-do-dai-hoc"
+title: "QĐ1401 - Ban hành Quy chế tuyển sinh trình độ đại học"
+source_url: "https://www.qnu.edu.vn/vi/dai-hoc-chinh-quy-1764/qd1401-ban-hanh-quy-che-tuyen-sinh-trinh-do-dai-hoc"
+retrieved_at: "2026-08-03"
+document_version: "not-stated"
+audience: "student"
+university: "Trường Đại học Quy Nhơn"
+category: "regulation"
+department: "academic-affairs"
+program: "undergraduate"
+topic: "admissions"
+language: "vi"
 ---
 
 # QĐ1401 - Ban hành Quy chế tuyển sinh trình độ đại học

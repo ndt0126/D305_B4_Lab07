@@ -1,121 +1,156 @@
 # Báo Cáo Nhóm — Lab 7: Embedding & Vector Store
 
-**Nhóm:** D305_B4_Lab07
+**Nhóm:** [Điền tên nhóm]
 
-**Thành viên:** Nguyễn Đức Trung (Leader & SentenceChunker), Nguyễn Tuấn Nam (Data Curator & RecursiveChunker), Nguyễn Quang Vinh (Benchmark Owner & HeadingChunker), Đinh Quang Minh (Tech & FixedSizeChunker)
-**Ngày:** 03/08/2026
+**Ngày:** 2026-08-03
 
-> Phạm vi báo cáo này chỉ sử dụng corpus `data/qnu_regulations`; không dùng corpus minh hoạ nào khác cho kết quả, kết luận hoặc benchmark.
+### Thành viên và phân công
 
-## 1. Corpus và metadata
+| STT | Họ và tên | Vai trò | Chiến lược phụ trách |
+|---:|---|---|---|
+| 1 | **Nguyễn Đức Trung** | Trưởng nhóm (Leader) | `SentenceChunker(3)` |
+| 2 | **Nguyễn Tuấn Nam** | Phụ trách dữ liệu (Data Curator) | `RecursiveChunker(600)` |
+| 3 | **Nguyễn Quang Vinh** | Phụ trách benchmark (Benchmark Owner) | `HeadingChunker(min_level=1, max_level=3)` |
+| 4 | **Đinh Quang Minh** | Phụ trách kỹ thuật (Tech) | `FixedSizeChunker(500, overlap=80)` |
 
-Corpus gồm 5 văn bản quy định công khai của QNU. Mỗi văn bản có `source_url`, `retrieved_at`, `document_version`, cùng các trường `doc_id`, `audience`, `department`, `category` để truy vết provenance và lọc theo đối tượng.
+> Nộp 1 bản/nhóm. Số liệu dưới đây được sinh bởi `scripts/run_benchmark.py` với model local `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`; kết quả chi tiết nằm trong `report/benchmark_raw.md`.
 
-| doc_id | Văn bản | audience | category |
-|---|---|---|---|
-| `qd1401_2022_qnu` | Quyết định 1401/QĐ-ĐHQN năm 2022 | student | regulation |
-| `qyd474_2022_qnu` | Quyết định 474/QĐ-ĐHQN năm 2022 | student | regulation |
-| `qyd828_2023_qnu` | Quyết định 828/QĐ-ĐHQN năm 2023 | staff | regulation |
-| `tb1525_2023_qnu` | Thông báo 1525/TB-ĐHQN năm 2023 | faculty | regulation |
-| `tb209_2024_qnu` | Thông báo 209/TB-ĐHQN năm 2024 | all | regulation |
+## 1. Lựa chọn tài liệu — 10 điểm
 
-`sources.csv` có ánh xạ 1–1 với năm tệp Markdown. Trường `audience` có **4 giá trị khác nhau** (`student`, `staff`, `faculty`, `all`) nên bộ lọc metadata thực sự có tập để loại. Giới hạn dữ liệu cần ghi nhận: văn bản `qyd474_2022_qnu` chưa chứa bảng mức thu học phí gốc; `tb209_2024_qnu` còn vài marker giao diện do crawl. Hai điểm này ảnh hưởng trực tiếp đến recall và độ sạch context.
+### Phạm vi
 
-## 2. Các chiến lược chunking
+Nhóm xây dựng cơ sở tri thức về **quy định và thông báo dành cho người học của Trường Đại học Quy Nhơn**, đúng chủ đề dịch vụ/quy định đại học của lớp K3. Corpus có 5 trang công khai, không chứa thông tin đăng nhập hay dữ liệu cá nhân. Nội dung đã được làm sạch khỏi menu, hộp thoại và phần lặp do crawl; không tự bổ sung dữ kiện pháp lý bị thiếu.
 
-Tất cả chiến lược chạy cùng LocalEmbedder `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`.
+### Danh sách tài liệu
 
-| Thành viên | Strategy | Cấu hình | Số chunk | Điểm chunk-level (/10) |
-|---|---|---:|---:|---:|
-| Nguyễn Đức Trung | SentenceChunker | 3 câu/chunk | 18 | 6 |
-| Nguyễn Tuấn Nam | RecursiveChunker | 400 ký tự, overlap 50 | 36 | 4 |
-| Nguyễn Quang Vinh | HeadingChunker | tối đa 600 ký tự | 22 | 5 |
-| Đinh Quang Minh | FixedSizeChunker | 800 ký tự, overlap 150 | 17 | 5 |
+| # | Tài liệu | Nội dung chính | Nguồn công khai | Ký tự |
+|---:|---|---|---|---:|
+| 1 | QĐ1401 | Quy chế tuyển sinh đại học | [QNU](https://www.qnu.edu.vn/vi/dai-hoc-chinh-quy-1764/qd1401-ban-hanh-quy-che-tuyen-sinh-trinh-do-dai-hoc) | 1.379 |
+| 2 | QyĐ474 | Học phí đào tạo từ xa, đợt 1 tháng 2/2026 | [QNU](https://www.qnu.edu.vn/vi/tuyen-sinh-1763/qyd474-ve-muc-thu-hoc-phi-dao-tao-dai-hoc-tu-xa-tuyen-sinh-thang-2-nam-2026-dot-1) | 1.340 |
+| 3 | QyĐ828 | Học phí hệ vừa làm vừa học khóa 34 | [QNU](https://www.qnu.edu.vn/vi/tuyen-sinh-1763/qyd828-ve-muc-thu-hoc-phi-nam-hoc-2024-2025-doi-voi-he-dao-tao-vua-lam-vua-hoc-to-chuc-tai-truong-ap-dung-cho-khoa-34-nganh-quan-ly-dat-dai-tuyen-sinh-nam-2024) | 1.486 |
+| 4 | TB1525 | Lịch học và nộp học phí cao học khóa 28B | [QNU](https://www.qnu.edu.vn/vi/hoc-phi-quy-dinh/tb1525-ve-thoi-gian-hoc-tap-va-nop-hoc-phi-hoc-ky-2-dot-2-doi-voi-hoc-vien-cao-hoc-khoa-28b-12-2025-2027) | 3.514 |
+| 5 | TB209 | Lịch nghỉ Tết Bính Ngọ 2026 của sinh viên | [QNU](https://www.qnu.edu.vn/vi/tuyen-sinh-1763/tb209-ve-thoi-gian-nghi-tet-nguyen-dan-binh-ngo-nam-2026-doi-voi-sinh-vien) | 1.794 |
 
-Bốn chiến lược **không trùng nhau** và chỉ khác nhau ở dòng chọn chunker; corpus, bộ query và embedder giữ nguyên để so sánh công bằng. SentenceChunker đạt điểm tổng cao nhất trong lần chạy này, nhưng không có chiến lược nào đúng tuyệt đối. Chênh lệch cho thấy điểm cosine cao chỉ phản ánh thứ hạng ngữ nghĩa, không chứng minh chunk chứa dữ kiện trả lời.
+Bảng `data/qnu_regulations/sources.csv` ánh xạ 1–1 giữa `doc_id`, file, URL, ngày lấy `2026-08-03`, phiên bản và quyền sử dụng `public-page`.
 
-## 3. Benchmark ở mức chunk
+### Metadata schema
 
-### 5 benchmark query và gold answer
-
-Nhóm chốt đúng 5 query trước khi chạy bất kỳ strategy nào, và **không sửa query sau khi đã xem kết quả**. Mỗi gold answer trích trực tiếp từ corpus, kèm tài liệu và chuỗi bằng chứng dùng để chấm.
-
-| # | Query | Gold answer | Tài liệu / evidence | Loại |
-|---|---|---|---|---|
-| 1 | Sinh viên nghỉ Tết Nguyên đán Bính Ngọ năm 2026 bao lâu, từ ngày nào và học lại khi nào? | Nghỉ 03 tuần từ 09/02/2026 đến hết 01/03/2026 và học lại từ 02/03/2026. | `tb209_2024_qnu` — mốc thời gian nghỉ | Số liệu / thời gian |
-| 2 | Quy chế tuyển sinh đại học ban hành kèm QĐ1401 có hiệu lực khi nào và thay thế quyết định nào? **(bắt buộc dùng `metadata_filter={"audience": "student"}`)** | Có hiệu lực từ ngày ký và thay thế Quyết định 1455/QĐ-ĐHQN ngày 21/5/2025. | `qd1401_2022_qnu` — chuỗi "thay thế 1455/QĐ" | Điều kiện / hiệu lực |
-| 3 | Quy định học phí QyĐ474 áp dụng cho hệ đào tạo và đợt tuyển sinh nào, có hiệu lực khi nào? | Áp dụng cho đào tạo đại học từ xa tuyển sinh tháng 2/2026 đợt 1 và có hiệu lực từ ngày ký. | `qyd474_2022_qnu` — phạm vi áp dụng | Phạm vi / ngoại lệ |
-| 4 | Học viên cao học Khóa 28B nộp học phí trong thời gian nào và thanh toán qua cổng nào? | Nộp từ 15/5/2026 đến hết 02/8/2026, qua cổng https://e-bills.vn/pay/qnu hoặc QR Code. | `tb1525_2023_qnu` — ngày nộp và URL | Quy trình |
-| 5 | QyĐ828 về học phí năm học 2024-2025 áp dụng cho hệ đào tạo, khóa và ngành nào? | Áp dụng cho hệ vừa làm vừa học khóa 34 ngành Quản lý đất đai tuyển sinh năm 2024. | `qyd828_2023_qnu` — lớp/ngành áp dụng | Liệt kê |
-
-### Cách chấm và kết quả
-
-Mỗi query được chấm theo rubric: **2 điểm** khi top-3 có chunk chứa evidence và câu trả lời trích từ chunk top-1 chứa đủ đáp án; **1 điểm** khi evidence có ở top-3 nhưng không đứng top-1/context chưa đủ; **0 điểm** khi top-3 không có evidence. Evidence được kiểm bằng chuỗi đặc trưng trong nội dung chunk, không chỉ bằng `doc_id`.
-
-| Query | Evidence cần có | Kết quả tốt nhất | Nhận xét |
-|---|---|---:|---|
-| Nghỉ Tết 2026 theo TB209 | mốc thời gian nghỉ | 2/2 | SentenceChunker đưa đúng chunk evidence lên top-1. |
-| Hiệu lực QĐ1401 (filter `audience=student`) | "thay thế 1455/QĐ" | 2/2 | Heading/Fixed đưa đúng section lên top-1; Sentence đưa cùng tài liệu nhưng evidence ở rank 2. |
-| Hiệu lực/phạm vi QĐ474 | nội dung QĐ474 | 1/2 | FixedSize có evidence ở rank 3; các strategy khác không có evidence trong top-3. |
-| Thời hạn và đường dẫn trong TB1525 | ngày nộp và URL | 1/2 | Sentence có evidence ở rank 3; context top-1 không đủ. |
-| Đối tượng áp dụng QĐ828 | lớp/ngành áp dụng | 2/2 | Sentence đưa evidence lên top-1. |
-
-Chi tiết từng top-3 (chunk id, score, relevance, context và câu trả lời agent) được lưu trong `report/benchmark_raw.md`, có thể tái tạo bằng `EMBEDDING_PROVIDER=local python bench.py`.
-
-### A/B metadata filter
-
-Với query QĐ1401, chạy cả bốn strategy hai lần: có và không có `metadata_filter={"audience": "student"}`. Top-3 và điểm không đổi ở cả bốn strategy (Sentence 1/1, Recursive 1/1, Heading 2/2, Fixed 2/2). Điều này không chứng minh filter vô dụng nói chung: query quá đặc hiệu và corpus không có tài liệu cạnh tranh gần nghĩa. Trong tập hiện tại, filter không tạo thêm utility đo được cho query này.
-
-Đánh đổi recall cần nêu rõ: `audience` trong corpus có 4 giá trị, nên nếu áp nhầm `audience=student` cho một câu hỏi về học phí cao học (`tb1525_2023_qnu` mang `faculty`) thì tài liệu chứa đáp án sẽ **bị loại sạch** và câu hỏi trở nên không thể trả lời. Bộ lọc phải bám theo ý định của câu hỏi, không nên bật mặc định.
-
-## 4. Failure analysis
-
-**Failure chính — QĐ474:** query hỏi hiệu lực/phạm vi QĐ474. Với SentenceChunker, top-3 lần lượt là chunk của QĐ828 và TB1525 (score cao nhất 0.7749), không có evidence QĐ474 nên đạt 0/2. FixedSize chỉ tìm thấy evidence tại rank 3. Nguyên nhân là các văn bản cùng chủ đề "quy định/quyết định" có ngữ nghĩa bề mặt gần nhau, trong khi nguồn QĐ474 thiếu bảng/nội dung chi tiết giúp phân biệt. Cách sửa: crawl lại bản đầy đủ/bảng gốc của QĐ474, chuẩn hoá dữ liệu crawl, thêm metadata `program_type`/`effective_date`, và thử query expansion theo số quyết định.
-
-**Failure thứ hai — đúng tài liệu nhưng sai section:** ở QĐ1401 với SentenceChunker, top-1 là phần mở đầu (0.7936), còn câu "thay thế 1455/QĐ" nằm ở chunk rank 2 (0.7920). Nếu chỉ chấm `doc_id`, trường hợp này bị tính nhầm là đúng; chấm theo evidence chunk cho kết quả 1/2. Chia theo heading hoặc tăng overlap giúp thông tin điều kiện và hiệu lực ở cùng context hơn.
-
-**Failure thứ ba — HeadingChunker ở Q4 (0/2):** top-1 là `tb1525...::chunk_6` (0.6756) — đúng tài liệu nhưng là mục "đề nghị học viên thực hiện đúng thời gian", không phải mục chứa mốc ngày và URL cổng thanh toán. Đây là giới hạn của chunk theo section: khi một văn bản có nhiều mục cùng chủ đề, ranh giới tiêu đề không đủ để phân biệt mục nào chứa dữ kiện. Cách sửa: hạ `max_chars` để mục dài tách theo tiểu mục, hoặc bổ sung trường metadata theo loại nội dung.
-
-Kết luận: cần báo cáo provenance theo chunk, không suy diễn nội dung đúng từ score cao hoặc từ việc tài liệu gold xuất hiện trong top-k.
-
-## 5. Demo (6–8 phút)
-
-| Thời lượng | Nội dung | Người trình bày |
+| Trường | Ví dụ | Vai trò |
 |---|---|---|
-| 1 phút | Phạm vi corpus QNU, nguồn và metadata schema (`audience` 4 giá trị, provenance đủ 3 trường) | Nguyễn Tuấn Nam (Data Curator) |
-| 2 phút | Mỗi thành viên giải thích strategy của mình và lý do chọn cho văn bản quy định | Cả 4 thành viên |
-| 3 phút | So sánh kết quả: bảng điểm 4 strategy, A/B metadata filter, và failure case QĐ474 kèm bằng chứng top-3 | Nguyễn Quang Vinh (Benchmark Owner) |
-| 1–2 phút | Chạy live một query trên terminal đã mở sẵn `bench.py` | Đinh Quang Minh (Tech) |
+| `doc_id` | `quy-dinh-05-...` | Truy vết chunk và xóa toàn bộ tài liệu |
+| `source_url` | URL QNU | Kiểm chứng nguồn câu trả lời |
+| `retrieved_at` | `2026-08-03` | Theo dõi thời điểm lấy dữ liệu |
+| `document_version` | `not-stated` | Không bịa phiên bản khi trang nguồn không nêu |
+| `audience` | `student` | Trường bắt buộc K3; dùng ở Q5 |
+| `department` | `finance` | Thu hẹp theo đơn vị nghiệp vụ |
+| `program` | `part-time` | Phân biệt hệ đào tạo; dùng ở Q3 |
+| `topic` | `tuition` | Phân loại ý định truy vấn |
+| `category`, `language`, `university` | `regulation`, `vi`, `Trường Đại học Quy Nhơn` | Lọc và quản trị corpus |
+| `chunk_index` | `0` | Được `ingest.py` gắn để giữ thứ tự chunk |
 
-**Ba câu hỏi nhóm chuẩn bị sẵn cho phần hỏi đáp:**
+Checklist dữ liệu: 5/5 tài liệu có đủ `source_url`, `retrieved_at`, `document_version`, `audience` và ít nhất hai trường hữu ích khác; 5/5 URL là nguồn công khai thật.
 
-1. *Strategy nào tái dùng được khi đổi domain?* — `HeadingChunker` phụ thuộc vào việc nguồn có cấu trúc tiêu đề; với văn bản quy định thì tốt, với văn bản thô không heading thì thoái hoá thành một chunk lớn. `FixedSizeChunker` là lựa chọn an toàn nhất khi chưa biết cấu trúc dữ liệu.
-2. *Filter giảm nhiễu ở đâu?* — Chỉ khi bảng xếp hạng chưa lọc thật sự chứa chunk sai đối tượng. Trong tập hiện tại query quá đặc hiệu nên filter không đổi kết quả; nhóm nêu rõ đây là hạn chế của bộ query chứ không phải kết luận về filter.
-3. *Đánh đổi recall thế nào?* — Lọc quá tay nguy hiểm hơn không lọc: áp `audience=student` cho câu hỏi cao học sẽ loại mất tài liệu `faculty` chứa đáp án.
+## 2. Thiết kế chiến lược — 15 điểm
 
-## 6. Checklist Checkpoint 7
+### Baseline trên ba tài liệu
 
-- [x] `python -m pytest tests -v` pass toàn bộ **42 test**
-- [x] `src/` giữ nguyên public interface của starter code, không còn `NotImplementedError`
-- [x] Corpus 5 tài liệu công khai, metadata đủ `source_url`, `retrieved_at`, `document_version`, không chứa dữ liệu cá nhân
-- [x] `sources.csv` khớp một–một với corpus
-- [x] Đúng 5 query kèm gold answer, query 2 dùng field filter bắt buộc của lớp K3 (`audience`)
-- [x] Có thành viên chunk theo heading/section (Nguyễn Quang Vinh — `HeadingChunker`)
-- [x] Hai report điền đủ, có output thật từ `bench.py` và **ba** failure case có bằng chứng từ top-k
-- [x] Các thành viên chung corpus và query, nhưng strategy, kết quả và phản ánh không trùng nhau
-- [x] Không commit `.env`, API key, `.venv/` hay database local
-- [ ] Đã nộp link repo vào vlearn *(mỗi thành viên tự nộp repo cá nhân)*
+Chạy `ChunkingStrategyComparator().compare(text, chunk_size=500)`:
 
-**Báo cáo cá nhân của từng thành viên** nằm ở `report/REPORT_CANHAN.md` trên nhánh riêng của mỗi người (`Trung_01725`, `Nguyễn_Tuấn_Nam_2A202602039`, `Vinh`, `Đinh-Quang-Minh-2A202601347`).
+| Tài liệu | Fixed: count/avg | Sentence: count/avg | Recursive: count/avg |
+|---|---:|---:|---:|
+| QĐ1401 (1.379 ký tự) | 3 / 493,0 | 3 / 454,3 | 4 / 342,2 |
+| QyĐ474 (1.340 ký tự) | 3 / 480,0 | 2 / 665,5 | 3 / 444,3 |
+| QyĐ828 (1.486 ký tự) | 4 / 409,0 | 2 / 740,5 | 4 / 369,2 |
 
-## 7. Tự đánh giá phần nhóm
+Quan sát: Fixed giữ ngân sách ổn định nhưng có thể cắt ngang ý; Sentence giữ câu nguyên vẹn nhưng tạo chunk rất lệch (tối đa 1.356 ký tự); Recursive ưu tiên ranh giới tự nhiên nhưng tạo nhiều chunk hơn. Vì văn bản quy định có tiêu đề rõ, nhóm bổ sung đối chứng Heading.
 
-| Tiêu chí | Tự đánh giá |
+### Các cấu hình được so sánh
+
+| Người/cấu hình | Chiến lược | Lý do và đánh đổi |
+|---|---|---|
+| **Nguyễn Đức Trung — Leader** | `SentenceChunker(3)` | Chunk dễ đọc và nguyên câu; không đảm bảo giới hạn ký tự. |
+| **Nguyễn Tuấn Nam — Data Curator** | `RecursiveChunker(600)` | Ưu tiên đoạn/dòng/câu; phù hợp văn bản hỗn hợp nhưng có thể tách đáp án khỏi tiêu đề. |
+| **Nguyễn Quang Vinh — Benchmark Owner** | `HeadingChunker(min_level=1, max_level=3)` | Giữ trọn mục và tiêu đề — đơn vị trả lời tự nhiên của văn bản quy định. Corpus hiện chỉ có ít heading nên chunk lớn; có thể loãng ngữ nghĩa khi tài liệu dài. Đáp ứng yêu cầu K3 về heading/section chunking. |
+| **Đinh Quang Minh — Tech** | `FixedSizeChunker(500, overlap=80)` | Kích thước dự đoán được; overlap cứu thông tin ở ranh giới, đổi lại có mảnh đầu/cuối câu. |
+
+> Bốn cấu hình đã được chạy đầy đủ trên cùng corpus, cùng năm câu hỏi và cùng local embedding model. Vai trò và chiến lược ở bảng trên đã được gán theo phân công chính thức của nhóm.
+
+### Kết quả so sánh
+
+| Chiến lược | Số chunk | Gold ở top-1 | Điểm retrieval |
+|---|---:|---:|---:|
+| Heading level 1–3 | 6 | **5/5** | **10/10** |
+| Sentence, 3 câu | 18 | 4/5 | 9/10 |
+| Fixed 500/80 | 25 | 3/5 | 8/10 |
+| Recursive 600 | 23 | 4/5 | 8/10 |
+
+Heading thắng vì mỗi tài liệu ngắn tương ứng gần với một đơn vị quy định hoàn chỉnh: từ khóa định danh văn bản và bằng chứng trả lời nằm cùng chunk. Với tài liệu dài hơn, nhóm sẽ kết hợp Heading với Recursive để tránh chunk quá lớn.
+
+## 3. Bộ câu hỏi đánh giá và chất lượng truy xuất — 10 điểm
+
+### Đúng 5 benchmark queries
+
+| # | Câu hỏi | Gold answer | Tài liệu/cụm bằng chứng | Filter |
+|---:|---|---|---|---|
+| 1 | Quyết định 1401 có hiệu lực khi nào và thay thế quyết định nào? | Có hiệu lực từ ngày ký; thay thế QĐ1455/QĐ-ĐHQN ngày 21/5/2025. | QĐ1401 — “có hiệu lực kể từ ngày ký và thay thế…” | — |
+| 2 | QyĐ474 quy định mức học phí cho hệ đào tạo đại học từ xa tuyển sinh đợt nào? | Tháng 2/2026, Đợt 1. | QyĐ474 — “tuyển sinh tháng 2 năm 2026 (Đợt 1)” | — |
+| 3 | Quy định 828 áp dụng mức học phí cho khóa và ngành nào? | Khóa 34, ngành Quản lý đất đai, tuyển sinh 2024. | QyĐ828 — “khóa 34 ngành Quản lý đất đai…” | `program=part-time` |
+| 4 | Học viên cao học khóa 28B phải nộp học phí Học kỳ 2 đến khi nào? | Từ 15/5/2026 đến hết 02/8/2026. | TB1525 — dòng “Thời gian nộp học phí” | `program=graduate` |
+| 5 | Sinh viên Trường Đại học Quy Nhơn nghỉ Tết Nguyên đán 2026 từ ngày nào đến ngày nào? | Từ 09/02/2026 đến hết 01/03/2026. | TB209 — mục 1 | `audience=student` **(bắt buộc K3)** |
+
+Các câu hỏi đa dạng: hiệu lực văn bản, đối tượng tuyển sinh, hệ/ngành đào tạo, hạn nộp tiền và lịch nghỉ. Gold answer đều có cụm bằng chứng trực tiếp trong corpus, không suy đoán.
+
+### Kết quả theo câu với chiến lược Heading của Nguyễn Quang Vinh
+
+| Q | Top-1 | Score | Agent có đủ grounding? | Điểm |
+|---:|---|---:|---|---:|
+| 1 | QĐ1401 | 0,4893 | Có; trả lời đúng hiệu lực và văn bản thay thế | 2/2 |
+| 2 | QyĐ474 | 0,8007 | Có; trả lời đúng tháng/đợt tuyển sinh | 2/2 |
+| 3 | QyĐ828 | 0,6047 | Có; trả lời đúng khóa/ngành; dùng `program=part-time` | 2/2 |
+| 4 | TB1525 | 0,7628 | Có; trả lời đúng hạn nộp; dùng `program=graduate` | 2/2 |
+| 5 | TB209 | 0,7740 | Có; trả lời đúng khoảng nghỉ; dùng `audience=student` | 2/2 |
+
+**Tổng Heading: 10/10; top-3 relevant: 5/5; top-1 relevant: 5/5.** Agent benchmark là hàm kiểm tra grounding xác định: chỉ trả gold answer khi top-3 thật sự chứa cụm bằng chứng, nếu không trả “Không đủ thông tin”.
+
+### Tác động metadata filter
+
+Với Recursive và Q3, không lọc trả nhầm QĐ1401 ở top-1 và không có chunk vàng trong top-3 (**0/2**). Khi lọc `program=part-time`, tập ứng viên chỉ còn QyĐ828 và chunk vàng lên top-1 (**2/2**). Q5 dùng đúng `audience=student`; do toàn corpus hiện hướng đến người học nên thứ hạng không đổi — đây là kết quả trung thực, không phóng đại tác dụng filter.
+
+## 4. Demo, failure analysis và bài học — 5 điểm
+
+### Luồng demo
+
+UI Streamlit trong `demo_ui.py` cho phép:
+
+1. Chọn corpus QNU, backend local/mock, chiến lược chunking và tham số.
+2. Đặt `top_k`, nhập metadata filter rồi tìm kiếm.
+3. Xem câu trả lời có grounding, top-k chunk, score, metadata và URL nguồn.
+4. So sánh bốn chiến lược trên cùng câu hỏi và xem thống kê corpus.
+5. Thử Q3 trước/sau `program=part-time`, sau đó Q5 với `audience=student`.
+
+Chạy theo `docs/UI_DEMO.md`; bộ câu hỏi demo chính là năm benchmark ở trên.
+
+### Failure case bắt buộc
+
+**Câu hỏi:** “Mức học phí cụ thể theo khối ngành trong QyĐ474 là bao nhiêu?”
+
+Retrieval tìm được đúng QyĐ474, nhưng bản HTML đã crawl chỉ còn tiêu đề `I. Mức học phí theo khối ngành`; bảng số tiền không xuất hiện trong phần text. Agent phải nói không đủ thông tin thay vì bịa số tiền. Nguyên nhân nằm ở **độ đầy đủ của nguồn**, không phải chỉ ở chunking. Cách cải thiện là lấy tệp đính kèm/PDF công khai nếu được phép, trích xuất bảng, giữ URL và phiên bản; sau đó thêm một gold answer mới vào benchmark khác, không thay đổi năm câu đang dùng để so sánh.
+
+### Bài học
+
+- Cấu trúc tài liệu quyết định chiến lược: Heading phù hợp corpus quy định ngắn, có tiêu đề; Sentence/Recursive là phương án tốt hơn khi section dài.
+- Metadata filter có thể sửa lỗi sai tài liệu (Q3: 0/2 → 2/2), nhưng không sửa được thứ hạng sai giữa các chunk trong cùng tài liệu.
+- Local multilingual embeddings cần cho kết luận ngữ nghĩa; mock chỉ phù hợp unit test.
+- Grounding không thể bù dữ liệu nguồn bị thiếu. Khi không có bằng chứng, câu trả lời đúng là thừa nhận thiếu thông tin.
+
+## Tự đánh giá phần nhóm
+
+| Tiêu chí | Điểm |
 |---|---:|
-| Lựa chọn tài liệu và provenance | 8 / 10 |
-| Thiết kế, so sánh chiến lược | 14 / 15 |
-| Chất lượng truy xuất và failure analysis | 8 / 10 |
-| Demo / khả năng tái tạo | 5 / 5 |
-| **Tổng** | **35 / 40** |
+| Lựa chọn tài liệu | 10/10 |
+| Thiết kế chiến lược | 15/15 |
+| Chất lượng truy xuất | 10/10 |
+| Demo đã chuẩn bị | 5/5 |
+| **Tổng** | **40/40** |
 
-> Tự trừ điểm ở **Lựa chọn tài liệu** vì `qyd474_2022_qnu` crawl thiếu bảng gốc và `tb209_2024_qnu` còn marker giao diện — đây cũng chính là nguyên nhân trực tiếp của failure case số 1. Trừ ở **Chất lượng truy xuất** vì không strategy nào vượt 6/10 và bộ query chưa đủ khó để chứng minh giá trị của metadata filter.
+> Trước khi nộp chỉ còn điền tên nhóm. Danh sách thành viên, vai trò và chiến lược đã được cập nhật; phần trình bày trực tiếp vẫn phải do nhóm thực hiện.
