@@ -232,6 +232,9 @@ def _metadata_filter_widget(documents) -> dict[str, str]:
     metadata_filter: dict[str, str] = {}
     for key, label in (
         ("audience", "Đối tượng"),
+        ("program", "Hệ đào tạo"),
+        ("department", "Đơn vị"),
+        ("topic", "Chủ đề"),
         ("category", "Danh mục"),
         ("language", "Ngôn ngữ"),
         ("doc_id", "Tài liệu"),
@@ -260,7 +263,10 @@ def _render_result(result: dict[str, Any], rank: int) -> None:
             st.metric("Score", f"{score:.4f}")
 
         chips = []
-        for key in ("doc_id", "audience", "category", "language", "chunk_index"):
+        for key in (
+            "doc_id", "audience", "program", "department", "topic",
+            "category", "language", "chunk_index",
+        ):
             if metadata.get(key) is not None:
                 chips.append(
                     f'<span class="meta-pill">{html.escape(key)}: {html.escape(str(metadata[key]))}</span>'
@@ -459,6 +465,9 @@ with corpus_tab:
             "Tiêu đề": document.metadata.get("title", "—"),
             "Ký tự": len(document.content),
             "audience": document.metadata.get("audience", "—"),
+            "program": document.metadata.get("program", "—"),
+            "department": document.metadata.get("department", "—"),
+            "topic": document.metadata.get("topic", "—"),
             "category": document.metadata.get("category", "—"),
             "Phiên bản": document.metadata.get("document_version", "—"),
             "Thiếu metadata": ", ".join(missing) if missing else "Không",

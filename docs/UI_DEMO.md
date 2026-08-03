@@ -22,7 +22,7 @@ Streamlit sẽ in URL local, thường là `http://localhost:8501`.
 1. Chọn corpus `qnu_regulations` và backend **Local đa ngữ**.
 2. Ở tab **Tra cứu RAG**, chọn một câu hỏi mẫu và bấm **Tìm kiếm & trả lời**.
 3. Chỉ ra top-3, score, `doc_id`, metadata, nội dung chunk và URL nguồn.
-4. Bật một metadata filter ở sidebar rồi chạy lại để so sánh.
+4. Chạy Q3 không lọc, sau đó chọn `Hệ đào tạo = part-time` để thấy đúng tài liệu được đưa lên; với Q5 chọn `Đối tượng = student` để chứng minh yêu cầu K3.
 5. Sang tab **So sánh chiến lược**, chạy cùng câu hỏi trên bốn chunker.
 6. Sang tab **Corpus & metadata** để chứng minh đủ số tài liệu và khả năng truy vết.
 

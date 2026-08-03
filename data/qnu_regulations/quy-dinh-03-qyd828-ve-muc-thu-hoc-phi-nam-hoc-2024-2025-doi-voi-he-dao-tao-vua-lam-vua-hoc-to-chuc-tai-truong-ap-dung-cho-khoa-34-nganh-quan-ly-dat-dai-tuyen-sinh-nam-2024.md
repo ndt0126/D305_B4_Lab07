@@ -1,16 +1,19 @@
 ---
 doc_id: "quy-dinh-03-qyd828-ve-muc-thu-hoc-phi-nam-hoc-2024-2025-doi-voi-he-dao-tao-vua-lam-vua-hoc-to-chuc-tai-truong-ap-dung-cho-khoa-34-nganh-quan-ly-dat-dai-tuyen-sinh-nam-2024"
-title: "QyĐ828 - Về mức thu học phí năm học 2024-2025 đối với hệ đào tạo vừa làm vừa học tổ chức tại Trường áp dụng cho khóa 34 ngành Quản lý đát đai tuyển sinh năm 2024"
+title: "QyĐ828 - Về mức thu học phí năm học 2024-2025 đối với hệ đào tạo vừa làm vừa học tổ chức tại Trường áp dụng cho khóa 34 ngành Quản lý đất đai tuyển sinh năm 2024"
 source_url: "https://www.qnu.edu.vn/vi/tuyen-sinh-1763/qyd828-ve-muc-thu-hoc-phi-nam-hoc-2024-2025-doi-voi-he-dao-tao-vua-lam-vua-hoc-to-chuc-tai-truong-ap-dung-cho-khoa-34-nganh-quan-ly-dat-dai-tuyen-sinh-nam-2024"
 retrieved_at: "2026-08-03"
 document_version: "not-stated"
 audience: "student"
-university: "Truong Dai hoc Quy Nhon"
+university: "Trường Đại học Quy Nhơn"
 category: "regulation"
+department: "finance"
+program: "part-time"
+topic: "tuition"
 language: "vi"
 ---
 
-# QyĐ828 - Về mức thu học phí năm học 2024-2025 đối với hệ đào tạo vừa làm vừa học tổ chức tại Trường áp dụng cho khóa 34 ngành Quản lý đát đai tuyển sinh năm 2024
+# QyĐ828 - Về mức thu học phí năm học 2024-2025 đối với hệ đào tạo vừa làm vừa học tổ chức tại Trường áp dụng cho khóa 34 ngành Quản lý đất đai tuyển sinh năm 2024
 
 Số: 828/QyĐ-ĐHQN
 

@@ -5,8 +5,11 @@ source_url: "https://www.qnu.edu.vn/vi/hoc-phi-quy-dinh/tb1525-ve-thoi-gian-hoc-
 retrieved_at: "2026-08-03"
 document_version: "not-stated"
 audience: "student"
-university: "Truong Dai hoc Quy Nhon"
+university: "Trường Đại học Quy Nhơn"
 category: "regulation"
+department: "graduate-studies"
+program: "graduate"
+topic: "tuition-schedule"
 language: "vi"
 ---
 

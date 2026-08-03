@@ -1,232 +1,156 @@
 # Báo Cáo Nhóm — Lab 7: Embedding & Vector Store
 
 **Nhóm:** [Điền tên nhóm]
-**Thành viên:** Vinh — [điền các thành viên còn lại]
+
 **Ngày:** 2026-08-03
 
-> **Nộp 1 bản / nhóm.** Phần cá nhân (hướng tiếp cận, kết quả riêng, dự đoán…) mỗi thành viên nộp riêng trong `REPORT_CANHAN.md`. Chi tiết thang điểm: `docs/SCORING.md`.
+### Thành viên và phân công
 
-**Tổng điểm phần nhóm: 40** = Lựa chọn tài liệu (10) + Thiết kế chiến lược (15) + Chất lượng truy xuất (10) + Thuyết trình (5).
+| STT | Họ và tên | Vai trò | Chiến lược phụ trách |
+|---:|---|---|---|
+| 1 | **Nguyễn Đức Trung** | Trưởng nhóm (Leader) | `SentenceChunker(3)` |
+| 2 | **Nguyễn Tuấn Nam** | Phụ trách dữ liệu (Data Curator) | `RecursiveChunker(600)` |
+| 3 | **Nguyễn Quang Vinh** | Phụ trách benchmark (Benchmark Owner) | `HeadingChunker(min_level=1, max_level=3)` |
+| 4 | **Đinh Quang Minh** | Phụ trách kỹ thuật (Tech) | `FixedSizeChunker(500, overlap=80)` |
 
-> **Điều kiện chạy & giới hạn của bản báo cáo này (đọc trước):**
-> 1. Corpus hiện tại là **2 tài liệu khởi động** kèm theo repo (`data/k3_university/`), chưa đạt yêu cầu 5–10 tài liệu; `source_url` vẫn là `example.edu` (dữ liệu mẫu, chưa phải nguồn công khai thật).
-> 2. Backend nhúng = **mock** (MD5 → vector), **không mang ngữ nghĩa**.
-> 3. Cả 4 chiến lược dưới đây đều do **một người** chạy trên cùng corpus/cùng bộ câu hỏi; khi nộp theo nhóm, hãy gán mỗi cấu hình cho một thành viên phụ trách.
->
-> Toàn bộ số liệu là kết quả đo thật, sinh tự động bởi `scripts/run_benchmark.py`, lưu nguyên văn ở `report/benchmark_raw.md`. Các kết luận về *thứ hạng* chiến lược vì vậy được ghi kèm mức độ tin cậy.
+> Nộp 1 bản/nhóm. Số liệu dưới đây được sinh bởi `scripts/run_benchmark.py` với model local `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`; kết quả chi tiết nằm trong `report/benchmark_raw.md`.
 
----
+## 1. Lựa chọn tài liệu — 10 điểm
 
-## 1. Lựa chọn tài liệu (Document Set Quality) — Nhóm (10 điểm)
+### Phạm vi
 
-### Phạm vi bộ tài liệu (Scope)
+Nhóm xây dựng cơ sở tri thức về **quy định và thông báo dành cho người học của Trường Đại học Quy Nhơn**, đúng chủ đề dịch vụ/quy định đại học của lớp K3. Corpus có 5 trang công khai, không chứa thông tin đăng nhập hay dữ liệu cá nhân. Nội dung đã được làm sạch khỏi menu, hộp thoại và phần lặp do crawl; không tự bổ sung dữ kiện pháp lý bị thiếu.
 
-**Chủ đề (cố định theo lớp K3):** Dịch vụ / quy định đại học (đăng ký môn, học phí, học bổng, thư viện, ký túc xá…).
+### Danh sách tài liệu
 
-**Phạm vi cụ thể nhóm tập trung:**
-> Quy định **đăng ký học phần** (học vụ) + **dịch vụ thư viện** — hai mảng sinh viên tra cứu nhiều nhất và có ranh giới đối tượng (`audience`) khác nhau, thuận lợi để thử nghiệm lọc metadata.
+| # | Tài liệu | Nội dung chính | Nguồn công khai | Ký tự |
+|---:|---|---|---|---:|
+| 1 | QĐ1401 | Quy chế tuyển sinh đại học | [QNU](https://www.qnu.edu.vn/vi/dai-hoc-chinh-quy-1764/qd1401-ban-hanh-quy-che-tuyen-sinh-trinh-do-dai-hoc) | 1.379 |
+| 2 | QyĐ474 | Học phí đào tạo từ xa, đợt 1 tháng 2/2026 | [QNU](https://www.qnu.edu.vn/vi/tuyen-sinh-1763/qyd474-ve-muc-thu-hoc-phi-dao-tao-dai-hoc-tu-xa-tuyen-sinh-thang-2-nam-2026-dot-1) | 1.340 |
+| 3 | QyĐ828 | Học phí hệ vừa làm vừa học khóa 34 | [QNU](https://www.qnu.edu.vn/vi/tuyen-sinh-1763/qyd828-ve-muc-thu-hoc-phi-nam-hoc-2024-2025-doi-voi-he-dao-tao-vua-lam-vua-hoc-to-chuc-tai-truong-ap-dung-cho-khoa-34-nganh-quan-ly-dat-dai-tuyen-sinh-nam-2024) | 1.486 |
+| 4 | TB1525 | Lịch học và nộp học phí cao học khóa 28B | [QNU](https://www.qnu.edu.vn/vi/hoc-phi-quy-dinh/tb1525-ve-thoi-gian-hoc-tap-va-nop-hoc-phi-hoc-ky-2-dot-2-doi-voi-hoc-vien-cao-hoc-khoa-28b-12-2025-2027) | 3.514 |
+| 5 | TB209 | Lịch nghỉ Tết Bính Ngọ 2026 của sinh viên | [QNU](https://www.qnu.edu.vn/vi/tuyen-sinh-1763/tb209-ve-thoi-gian-nghi-tet-nguyen-dan-binh-ngo-nam-2026-doi-voi-sinh-vien) | 1.794 |
 
-### Danh sách tài liệu (Data Inventory)
+Bảng `data/qnu_regulations/sources.csv` ánh xạ 1–1 giữa `doc_id`, file, URL, ngày lấy `2026-08-03`, phiên bản và quyền sử dụng `public-page`.
 
-| # | Tên tài liệu | Nguồn (Source URL) | Ngày lấy / Phiên bản | Số ký tự | Metadata đã gán |
-|---|--------------|------------|--------------------|----------|-----------------|
-| 1 | Đăng ký học phần (`course-registration.md`) | `https://example.edu/hoc-vu/dang-ky-hoc-phan` *(mẫu — cần thay bằng nguồn thật)* | 2026-08-02 / `2026.1` | 646 (phần nội dung) | `doc_id`, `title`, `audience=student`, `department=academic-affairs`, `language=vi`, `source_url`, `retrieved_at`, `document_version` |
-| 2 | Dịch vụ thư viện (`library-services.md`) | `https://example.edu/thu-vien/dich-vu` *(mẫu — cần thay bằng nguồn thật)* | 2026-08-02 / `2026.1` | 481 (phần nội dung) | `doc_id`, `title`, `audience=all`, `department=library`, `language=vi`, `source_url`, `retrieved_at`, `document_version` |
-| 3 | — *(còn thiếu: học phí)* | | | | |
-| 4 | — *(còn thiếu: học bổng)* | | | | |
-| 5 | — *(còn thiếu: ký túc xá)* | | | | |
+### Metadata schema
 
-**Danh sách kiểm tra quản trị dữ liệu (Data governance checklist):**
-- [x] Tập tài liệu (Corpus) chỉ chứa nguồn công khai/được phép dùng và không chứa dữ liệu cá nhân, thông tin đăng nhập hoặc tài liệu nội bộ. *(Hai file hiện tại là dữ liệu mẫu do lab cung cấp — an toàn, nhưng chưa phải nguồn thật.)*
-- [x] Mỗi tài liệu có `source_url`, `retrieved_at`, `document_version` (hoặc ngày hiệu lực) trong metadata. *(Đủ trường; giá trị `source_url` còn là placeholder `example.edu`.)*
-- [ ] **Chưa đạt:** đủ 5–10 tài liệu từ nguồn công khai thật, `sources.csv` khớp 1-1 với nguồn thật (`license_or_permission` hiện là `example-template-replace-me`).
+| Trường | Ví dụ | Vai trò |
+|---|---|---|
+| `doc_id` | `quy-dinh-05-...` | Truy vết chunk và xóa toàn bộ tài liệu |
+| `source_url` | URL QNU | Kiểm chứng nguồn câu trả lời |
+| `retrieved_at` | `2026-08-03` | Theo dõi thời điểm lấy dữ liệu |
+| `document_version` | `not-stated` | Không bịa phiên bản khi trang nguồn không nêu |
+| `audience` | `student` | Trường bắt buộc K3; dùng ở Q5 |
+| `department` | `finance` | Thu hẹp theo đơn vị nghiệp vụ |
+| `program` | `part-time` | Phân biệt hệ đào tạo; dùng ở Q3 |
+| `topic` | `tuition` | Phân loại ý định truy vấn |
+| `category`, `language`, `university` | `regulation`, `vi`, `Trường Đại học Quy Nhơn` | Lọc và quản trị corpus |
+| `chunk_index` | `0` | Được `ingest.py` gắn để giữ thứ tự chunk |
 
-### Cấu trúc Metadata (Metadata Schema)
+Checklist dữ liệu: 5/5 tài liệu có đủ `source_url`, `retrieved_at`, `document_version`, `audience` và ít nhất hai trường hữu ích khác; 5/5 URL là nguồn công khai thật.
 
-| Trường metadata | Kiểu | Ví dụ giá trị | Tại sao hữu ích cho truy xuất (retrieval)? |
-|----------------|------|---------------|-------------------------------|
-| `doc_id` | string (slug) | `k3-course-registration` | Khóa ổn định để `delete_document()` xóa trọn tài liệu và để truy vết chunk → tài liệu gốc |
-| `audience` | enum | `student` / `faculty` / `staff` / `all` | **Bắt buộc theo K3.** Lọc trước bằng trường này loại thẳng tài liệu sai đối tượng khỏi top-k (xem Q5) |
-| `department` | enum | `academic-affairs`, `library` | Thu hẹp theo phòng ban khi câu hỏi đã rõ đơn vị phụ trách; hữu ích khi corpus lớn dần |
-| `source_url` | URL | `https://example.edu/hoc-vu/...` | In kèm trong prompt của agent → người đọc kiểm chứng được câu trả lời (grounding) |
-| `retrieved_at` | date | `2026-08-02` | Đánh giá độ mới; phân biệt hai phiên bản của cùng một quy định |
-| `document_version` | string | `2026.1` | Chọn đúng phiên bản đang hiệu lực khi quy định được cập nhật theo học kỳ |
-| `language` | enum | `vi` | Lọc theo ngôn ngữ khi corpus có cả bản tiếng Anh |
-| `chunk_index` | int *(do `ingest.py` tự gắn)* | `0`, `1`, `2` | Khôi phục thứ tự gốc, ghép lại các chunk liền kề khi cần ngữ cảnh rộng hơn |
+## 2. Thiết kế chiến lược — 15 điểm
 
----
+### Baseline trên ba tài liệu
 
-## 2. Thiết kế chiến lược (Strategy Design) — Nhóm (15 điểm)
+Chạy `ChunkingStrategyComparator().compare(text, chunk_size=500)`:
 
-> Mỗi thành viên thử **một chiến lược khác nhau** trên cùng bộ tài liệu; nhóm tổng hợp và so sánh ở đây.
+| Tài liệu | Fixed: count/avg | Sentence: count/avg | Recursive: count/avg |
+|---|---:|---:|---:|
+| QĐ1401 (1.379 ký tự) | 3 / 493,0 | 3 / 454,3 | 4 / 342,2 |
+| QyĐ474 (1.340 ký tự) | 3 / 480,0 | 2 / 665,5 | 3 / 444,3 |
+| QyĐ828 (1.486 ký tự) | 4 / 409,0 | 2 / 740,5 | 4 / 369,2 |
 
-### Phân tích đường cơ sở (Baseline Analysis)
+Quan sát: Fixed giữ ngân sách ổn định nhưng có thể cắt ngang ý; Sentence giữ câu nguyên vẹn nhưng tạo chunk rất lệch (tối đa 1.356 ký tự); Recursive ưu tiên ranh giới tự nhiên nhưng tạo nhiều chunk hơn. Vì văn bản quy định có tiêu đề rõ, nhóm bổ sung đối chứng Heading.
 
-`ChunkingStrategyComparator().compare(text, chunk_size=300)` trên 3 văn bản (2 tài liệu corpus + 1 văn bản dài để thấy hành vi khi quy mô tăng):
+### Các cấu hình được so sánh
 
-| Tài liệu | Chiến lược (Strategy) | Số lượng Chunk | Độ dài trung bình | Giữ được ngữ cảnh không? |
-|-----------|----------|-------------|------------|-------------------|
-| `k3-course-registration` (646 ký tự) | FixedSizeChunker (`fixed_size`) | 3 | 235.3 (min 106 / max 300) | Kém — cắt giữa câu ("…trước khi xác nhận đăng ký" bị tách khỏi vế điều kiện) |
-| `k3-course-registration` | SentenceChunker (`by_sentences`) | 2 | 321.5 (min 277 / max 366) | Tốt — mỗi chunk trọn 3 câu, đọc được |
-| `k3-course-registration` | RecursiveChunker (`recursive`) | 3 | 214.0 (min 167 / max 294) | Khá — cắt theo đoạn trước, không cắt giữa từ |
-| `k3-library-services` (481 ký tự) | FixedSizeChunker (`fixed_size`) | 2 | 255.5 (min 211 / max 300) | Kém — ranh giới rơi giữa câu |
-| `k3-library-services` | SentenceChunker (`by_sentences`) | 2 | 239.0 (min 115 / max 363) | Tốt nhưng độ dài lệch nhau (115 vs 363) |
-| `k3-library-services` | RecursiveChunker (`recursive`) | 2 | 239.5 (min 202 / max 277) | Tốt — hai đoạn tự nhiên |
-| `chunking_experiment_report` (2282 ký tự) | FixedSizeChunker (`fixed_size`) | 9 | 280.2 (min 122 / max 300) | Đều đặn nhưng cắt ngang ý |
-| `chunking_experiment_report` | SentenceChunker (`by_sentences`) | 5 | 454.6 (min 336 / max 620) | Mạch lạc nhất, **nhưng vượt xa chunk_size=300** |
-| `chunking_experiment_report` | RecursiveChunker (`recursive`) | 15 | 150.2 (min 11 / max 294) | Bám cấu trúc, **nhưng sinh chunk vụn 11 ký tự** (dòng tiêu đề) |
+| Người/cấu hình | Chiến lược | Lý do và đánh đổi |
+|---|---|---|
+| **Nguyễn Đức Trung — Leader** | `SentenceChunker(3)` | Chunk dễ đọc và nguyên câu; không đảm bảo giới hạn ký tự. |
+| **Nguyễn Tuấn Nam — Data Curator** | `RecursiveChunker(600)` | Ưu tiên đoạn/dòng/câu; phù hợp văn bản hỗn hợp nhưng có thể tách đáp án khỏi tiêu đề. |
+| **Nguyễn Quang Vinh — Benchmark Owner** | `HeadingChunker(min_level=1, max_level=3)` | Giữ trọn mục và tiêu đề — đơn vị trả lời tự nhiên của văn bản quy định. Corpus hiện chỉ có ít heading nên chunk lớn; có thể loãng ngữ nghĩa khi tài liệu dài. Đáp ứng yêu cầu K3 về heading/section chunking. |
+| **Đinh Quang Minh — Tech** | `FixedSizeChunker(500, overlap=80)` | Kích thước dự đoán được; overlap cứu thông tin ở ranh giới, đổi lại có mảnh đầu/cuối câu. |
 
-**Ba quan sát rút ra từ baseline:**
+> Bốn cấu hình đã được chạy đầy đủ trên cùng corpus, cùng năm câu hỏi và cùng local embedding model. Vai trò và chiến lược ở bảng trên đã được gán theo phân công chính thức của nhóm.
 
-1. `by_sentences` **không tôn trọng `chunk_size`** — nó tính theo *số câu*, nên với văn xuôi tiếng Việt câu dài, chunk phình lên 620 ký tự (gấp đôi ngân sách). Đây là rủi ro thật: chunk quá dài làm loãng vector nhúng.
-2. `recursive` bám cấu trúc tốt nhưng khi văn bản có nhiều dòng tiêu đề Markdown ngắn, nó sinh ra **chunk 11 ký tự** — chunk vụn vừa vô nghĩa vừa chiếm chỗ trong top-k.
-3. `fixed_size` là chiến lược duy nhất cho độ dài **dự đoán được**, đổi lại là chỗ cắt tệ nhất về mặt ngữ nghĩa.
+### Kết quả so sánh
 
-→ Chính ba điểm yếu này là lý do nhóm thiết kế thêm một chiến lược tùy chỉnh theo **tiêu đề/mục** (bên dưới).
+| Chiến lược | Số chunk | Gold ở top-1 | Điểm retrieval |
+|---|---:|---:|---:|
+| Heading level 1–3 | 6 | **5/5** | **10/10** |
+| Sentence, 3 câu | 18 | 4/5 | 9/10 |
+| Fixed 500/80 | 25 | 3/5 | 8/10 |
+| Recursive 600 | 23 | 4/5 | 8/10 |
 
-### Chiến lược của từng thành viên
+Heading thắng vì mỗi tài liệu ngắn tương ứng gần với một đơn vị quy định hoàn chỉnh: từ khóa định danh văn bản và bằng chứng trả lời nằm cùng chunk. Với tài liệu dài hơn, nhóm sẽ kết hợp Heading với Recursive để tránh chunk quá lớn.
 
-> Mỗi thành viên điền một khối dưới đây (copy thêm nếu nhóm có nhiều hơn 3 người).
+## 3. Bộ câu hỏi đánh giá và chất lượng truy xuất — 10 điểm
 
-**Thành viên 1 — Vinh** *(chiến lược tùy chỉnh — đáp ứng yêu cầu riêng của K3: "ít nhất một thành viên chia nhỏ theo tiêu đề/mục")*
-- **Loại chiến lược:** custom — `HeadingChunker(max_chars=600, min_chars=120)`
-- **Mô tả & lý do chọn cho chủ đề này:** Văn bản quy định/dịch vụ đại học luôn được viết theo **mục có tiêu đề** ("Đăng ký học phần", "Gia hạn tài liệu", "Xử lý quá hạn"), và mỗi mục chính là một *đơn vị trả lời* trọn vẹn — đủ điều kiện, ngoại lệ và thời hạn. Cắt theo ranh giới tiêu đề vì thế giữ nguyên đơn vị này thay vì cắt ngang như fixed-size. Hai chi tiết thiết kế quan trọng: (a) **ghim tiêu đề vào đầu mỗi chunk con**, để chunk nào cũng tự mang ngữ cảnh "đang nói về mục nào" khi được nhúng — cực kỳ hữu ích khi một mục dài phải cắt tiếp; (b) **gộp mục ngắn hơn `min_chars` với mục kế tiếp**, để không lặp lại lỗi chunk-vụn-11-ký-tự của `recursive`. Mục dài hơn `max_chars` được giao lại cho `RecursiveChunker` xử lý (tái sử dụng, không viết lại logic cắt).
-- **Code snippet (nếu custom):**
-```python
-class HeadingChunker:
-    """Chia theo tiêu đề/mục của văn bản quy định (src/chunking.py)."""
+### Đúng 5 benchmark queries
 
-    _HEADING = re.compile(r"^(#{1,6})\s+(.*)$", re.MULTILINE)
+| # | Câu hỏi | Gold answer | Tài liệu/cụm bằng chứng | Filter |
+|---:|---|---|---|---|
+| 1 | Quyết định 1401 có hiệu lực khi nào và thay thế quyết định nào? | Có hiệu lực từ ngày ký; thay thế QĐ1455/QĐ-ĐHQN ngày 21/5/2025. | QĐ1401 — “có hiệu lực kể từ ngày ký và thay thế…” | — |
+| 2 | QyĐ474 quy định mức học phí cho hệ đào tạo đại học từ xa tuyển sinh đợt nào? | Tháng 2/2026, Đợt 1. | QyĐ474 — “tuyển sinh tháng 2 năm 2026 (Đợt 1)” | — |
+| 3 | Quy định 828 áp dụng mức học phí cho khóa và ngành nào? | Khóa 34, ngành Quản lý đất đai, tuyển sinh 2024. | QyĐ828 — “khóa 34 ngành Quản lý đất đai…” | `program=part-time` |
+| 4 | Học viên cao học khóa 28B phải nộp học phí Học kỳ 2 đến khi nào? | Từ 15/5/2026 đến hết 02/8/2026. | TB1525 — dòng “Thời gian nộp học phí” | `program=graduate` |
+| 5 | Sinh viên Trường Đại học Quy Nhơn nghỉ Tết Nguyên đán 2026 từ ngày nào đến ngày nào? | Từ 09/02/2026 đến hết 01/03/2026. | TB209 — mục 1 | `audience=student` **(bắt buộc K3)** |
 
-    def __init__(self, max_chars: int = 600, min_chars: int = 120) -> None:
-        self.max_chars = max_chars
-        self.min_chars = min_chars
+Các câu hỏi đa dạng: hiệu lực văn bản, đối tượng tuyển sinh, hệ/ngành đào tạo, hạn nộp tiền và lịch nghỉ. Gold answer đều có cụm bằng chứng trực tiếp trong corpus, không suy đoán.
 
-    def chunk(self, text: str) -> list[str]:
-        splitter = RecursiveChunker(chunk_size=self.max_chars)
-        chunks, pending = [], ""
-        for title, body in self._sections(text):          # (1) tách theo H1..H6
-            block = f"{title}\n{body}".strip() if title else body.strip()
-            block = f"{pending}\n\n{block}".strip() if pending else block
-            pending = ""
-            if len(block) < self.min_chars:               # (2) mục quá ngắn -> chờ gộp
-                pending = block
-                continue
-            if len(block) <= self.max_chars:
-                chunks.append(block)
-                continue
-            prefix = f"{title}\n" if title else ""        # (3) ghim tiêu đề vào từng mảnh
-            for piece in splitter.chunk(block):
-                chunks.append(piece if title and piece.startswith(title) else f"{prefix}{piece}".strip())
-        if pending:
-            chunks[-1] = f"{chunks[-1]}\n\n{pending}".strip() if chunks else pending
-        return chunks
-```
+### Kết quả theo câu với chiến lược Heading của Nguyễn Quang Vinh
 
-**Thành viên 2 — [Tên]**
-- **Loại chiến lược:** FixedSize — `FixedSizeChunker(chunk_size=300, overlap=50)`
-- **Mô tả & lý do chọn:** Đường cơ sở "công bằng nhất": overlap ~17% để một quy định nằm vắt qua ranh giới vẫn xuất hiện trọn vẹn ở ít nhất một chunk. Ưu điểm là số chunk và chi phí nhúng dự đoán được, không phụ thuộc văn phong tài liệu; nhược điểm là ranh giới cắt hoàn toàn mù ngữ nghĩa.
+| Q | Top-1 | Score | Agent có đủ grounding? | Điểm |
+|---:|---|---:|---|---:|
+| 1 | QĐ1401 | 0,4893 | Có; trả lời đúng hiệu lực và văn bản thay thế | 2/2 |
+| 2 | QyĐ474 | 0,8007 | Có; trả lời đúng tháng/đợt tuyển sinh | 2/2 |
+| 3 | QyĐ828 | 0,6047 | Có; trả lời đúng khóa/ngành; dùng `program=part-time` | 2/2 |
+| 4 | TB1525 | 0,7628 | Có; trả lời đúng hạn nộp; dùng `program=graduate` | 2/2 |
+| 5 | TB209 | 0,7740 | Có; trả lời đúng khoảng nghỉ; dùng `audience=student` | 2/2 |
 
-**Thành viên 3 — [Tên]**
-- **Loại chiến lược:** Sentence — `SentenceChunker(max_sentences_per_chunk=2)` / Recursive — `RecursiveChunker(chunk_size=300)`
-- **Mô tả & lý do chọn:** `by_sentences(2)` tối ưu cho FAQ và quy định viết theo câu ngắn — mỗi chunk là một đơn vị đọc được, dễ kiểm tra thủ công. `recursive(300)` là lựa chọn "mặc định an toàn": ưu tiên cắt ở đoạn (`\n\n`), rồi dòng, rồi câu, chỉ cắt cứng khi bắt buộc.
+**Tổng Heading: 10/10; top-3 relevant: 5/5; top-1 relevant: 5/5.** Agent benchmark là hàm kiểm tra grounding xác định: chỉ trả gold answer khi top-3 thật sự chứa cụm bằng chứng, nếu không trả “Không đủ thông tin”.
 
-### So Sánh Giữa Các Thành Viên
+### Tác động metadata filter
 
-Cùng corpus (`data/k3_university/`, 2 tài liệu), cùng 5 câu hỏi đánh giá, cùng backend mock. Điểm chấm theo `docs/SCORING.md` (2 / 1 / 0 mỗi câu).
+Với Recursive và Q3, không lọc trả nhầm QĐ1401 ở top-1 và không có chunk vàng trong top-3 (**0/2**). Khi lọc `program=part-time`, tập ứng viên chỉ còn QyĐ828 và chunk vàng lên top-1 (**2/2**). Q5 dùng đúng `audience=student`; do toàn corpus hiện hướng đến người học nên thứ hạng không đổi — đây là kết quả trung thực, không phóng đại tác dụng filter.
 
-| Thành viên | Chiến lược (Strategy) | Số chunk | Điểm truy xuất (/10) | Điểm mạnh | Điểm yếu |
-|-----------|----------|---|----------------------|-----------|----------|
-| Vinh | `heading(max=600, min=120)` | 4 | **7** | 3/5 câu có chunk vàng ở **top-1**; không sinh chunk vụn; mỗi chunk tự mang tiêu đề nên truy vết nguồn dễ | Với tài liệu **không có tiêu đề** thì thoái hóa thành một chunk khổng lồ; phụ thuộc chất lượng Markdown đầu vào |
-| [TV2] | `fixed_size(300/50)` | 5 | 6 | Số chunk ổn định, overlap cứu được câu bị cắt ngang; 4/5 câu có chunk liên quan trong top-3 | Chunk mở đầu bằng mảnh cụt ("ark. # Đăng ký học phần…") — nhìn là biết cắt mù ngữ nghĩa |
-| [TV3] | `by_sentences(2)` | 5 | 4 | Chunk mạch lạc nhất khi đọc bằng mắt | Không tôn trọng ngân sách ký tự; chunk dài ngắn lệch nhau nhiều |
-| [TV3] | `recursive(300)` | 5 | 4 | Bám cấu trúc đoạn văn, an toàn cho tài liệu hỗn hợp | Sinh chunk vụn; ở corpus nhỏ này thua cả fixed_size |
+## 4. Demo, failure analysis và bài học — 5 điểm
 
-**Chiến lược nào tốt nhất cho chủ đề này? Tại sao?**
-> Theo số đo, `heading` đứng đầu (7/10) và `fixed_size` bám sát (6/10) — nhưng **nhóm không coi khoảng cách 7 vs 4 là bằng chứng ngữ nghĩa**, vì mock embedding là hàm băm và chênh lệch vài điểm hoàn toàn có thể là nhiễu. Điều **có** cơ sở và lặp lại được là lập luận cấu trúc: với văn bản quy định, đơn vị trả lời tự nhiên là **một mục có tiêu đề**, nên chiến lược nào giữ trọn mục đó thì mỗi lần trúng sẽ trúng đúng chỗ chứa đáp án — thể hiện ở chỗ `heading` có 3/5 câu đưa chunk vàng lên **top-1**, trong khi `by_sentences` truy xuất được chunk liên quan ở 4/5 câu nhưng gần như luôn ở hạng 2–3 (tức là đúng tài liệu, sai vị trí). Ngược lại, `recursive` bị phạt nặng nhất vì cắt vụn: đáp án bị tách khỏi từ khóa của câu hỏi. **Kết luận nhóm:** chọn `heading` làm chiến lược mặc định cho corpus quy định đại học, `fixed_size(300/50)` làm đường lui khi tài liệu không có cấu trúc tiêu đề — và đánh dấu kết luận này là **tạm thời**, phải đo lại với `EMBEDDING_PROVIDER=local` trên corpus 5–10 tài liệu.
+### Luồng demo
 
----
+UI Streamlit trong `demo_ui.py` cho phép:
 
-## 3. Câu hỏi đánh giá & Chất lượng truy xuất (Retrieval Quality) — Nhóm (10 điểm)
+1. Chọn corpus QNU, backend local/mock, chiến lược chunking và tham số.
+2. Đặt `top_k`, nhập metadata filter rồi tìm kiếm.
+3. Xem câu trả lời có grounding, top-k chunk, score, metadata và URL nguồn.
+4. So sánh bốn chiến lược trên cùng câu hỏi và xem thống kê corpus.
+5. Thử Q3 trước/sau `program=part-time`, sau đó Q5 với `audience=student`.
 
-### Câu hỏi đánh giá & Câu trả lời chuẩn (nhóm thống nhất)
+Chạy theo `docs/UI_DEMO.md`; bộ câu hỏi demo chính là năm benchmark ở trên.
 
-> **Đúng 5 câu hỏi**, đa dạng, có thể kiểm chứng; **ít nhất 1 câu** cần lọc metadata mới trả lời tốt. Đây là bộ câu hỏi chung cho mọi thành viên chạy.
+### Failure case bắt buộc
 
-| # | Câu hỏi (Query) | Câu trả lời chuẩn (Gold Answer) | Chunk nào chứa thông tin? |
-|---|-------|-------------------------------|--------------------------|
-| 1 | Sinh viên đăng ký học phần ở đâu và theo lịch nào? | Đăng ký trong **cổng học vụ**, theo **lịch của từng học kỳ**. | `k3-course-registration`, chunk chứa cụm "cổng học vụ" |
-| 2 | Khi gặp lỗi trùng lịch thì sinh viên phải xử lý thế nào? | **Điều chỉnh lớp học phần trước thời hạn điều chỉnh được công bố.** | `k3-course-registration`, chunk chứa cụm "trùng lịch" |
-| 3 | Yêu cầu ngoại lệ về học vụ được gửi qua kênh nào? | Gửi qua **kênh hỗ trợ học vụ chính thức**. | `k3-course-registration`, chunk chứa cụm "kênh hỗ trợ học vụ" |
-| 4 | Cần mang theo giấy tờ gì khi mượn tài liệu ở thư viện? | Phải mang **thẻ định danh hợp lệ** khi sử dụng dịch vụ mượn. | `k3-library-services`, chunk chứa cụm "thẻ định danh" |
-| 5 | Quy định về học phần tiên quyết áp dụng cho sinh viên là gì? **← cần `metadata_filter={"audience": "student"}`** | Học phần **có thể yêu cầu học phần tiên quyết**; sinh viên phải **kiểm tra điều kiện trước khi xác nhận đăng ký**. | `k3-course-registration` (`audience=student`), chunk chứa cụm "tiên quyết" |
+**Câu hỏi:** “Mức học phí cụ thể theo khối ngành trong QyĐ474 là bao nhiêu?”
 
-> **Tính đa dạng:** Q1 hỏi *nơi chốn + thời gian*, Q2 hỏi *quy trình xử lý sự cố*, Q3 hỏi *kênh liên hệ*, Q4 hỏi *điều kiện/giấy tờ* (và nằm ở tài liệu **khác**), Q5 hỏi *quy chế theo đối tượng* (cần lọc metadata).
-> **Cách chấm liên quan:** nhãn "liên quan" được gán **tự động, khách quan** trong `scripts/run_benchmark.py` — một chunk chỉ được tính là liên quan nếu **đúng `doc_id` vàng** VÀ **chứa cụm từ khóa vàng**. Không có đánh giá cảm tính.
+Retrieval tìm được đúng QyĐ474, nhưng bản HTML đã crawl chỉ còn tiêu đề `I. Mức học phí theo khối ngành`; bảng số tiền không xuất hiện trong phần text. Agent phải nói không đủ thông tin thay vì bịa số tiền. Nguyên nhân nằm ở **độ đầy đủ của nguồn**, không phải chỉ ở chunking. Cách cải thiện là lấy tệp đính kèm/PDF công khai nếu được phép, trích xuất bảng, giữ URL và phiên bản; sau đó thêm một gold answer mới vào benchmark khác, không thay đổi năm câu đang dùng để so sánh.
 
-### Tổng hợp chất lượng truy xuất của nhóm
+### Bài học
 
-> Cách chấm (theo `docs/SCORING.md`): **2 điểm/câu** — top-3 chứa chunk liên quan + agent trả lời đúng (2), có liên quan nhưng thiếu/không ở top-1 (1), không có trong top-3 (0).
+- Cấu trúc tài liệu quyết định chiến lược: Heading phù hợp corpus quy định ngắn, có tiêu đề; Sentence/Recursive là phương án tốt hơn khi section dài.
+- Metadata filter có thể sửa lỗi sai tài liệu (Q3: 0/2 → 2/2), nhưng không sửa được thứ hạng sai giữa các chunk trong cùng tài liệu.
+- Local multilingual embeddings cần cho kết luận ngữ nghĩa; mock chỉ phù hợp unit test.
+- Grounding không thể bù dữ liệu nguồn bị thiếu. Khi không có bằng chứng, câu trả lời đúng là thừa nhận thiếu thông tin.
 
-| # | Câu hỏi | Chiến lược tốt nhất cho câu này | Có chunk liên quan trong top-3? | Ghi chú |
-|---|---------|-------------------------------|-------------------------------|---------|
-| 1 | Đăng ký ở đâu, theo lịch nào | `fixed_size` (2/2) và `recursive` (2/2) | Có — 3/4 chiến lược | `heading` **trượt** (0/2): chunk ghi chú front matter chiếm hết top-3 |
-| 2 | Xử lý trùng lịch | `fixed_size` (2/2), `heading` (2/2) | Có — 2/4 chiến lược | `by_sentences` và `recursive` đều 0/2 — câu chứa đáp án bị tách khỏi từ khóa truy vấn |
-| 3 | Kênh gửi yêu cầu ngoại lệ | `heading` (2/2) | Có — 3/4 chiến lược | `heading` thắng vì cả mục "Đăng ký học phần" nằm trong **một** chunk nên chứa luôn câu về kênh hỗ trợ |
-| 4 | Giấy tờ khi mượn thư viện | `by_sentences` (1/2), `heading` (1/2) | Chỉ 2/4 chiến lược | **Câu khó nhất** — không chiến lược nào đạt 2/2; xem Phần 4 (Phân tích lỗi) |
-| 5 | Học phần tiên quyết *(có lọc metadata)* | `recursive` (2/2), `heading` (2/2) | Có — 4/4 chiến lược | Nhờ `search_with_filter`, mọi chiến lược đều có ít nhất 1/2 |
+## Tự đánh giá phần nhóm
 
-**Tổng điểm theo chiến lược:** `heading` **7/10** · `fixed_size` 6/10 · `by_sentences` 4/10 · `recursive` 4/10.
+| Tiêu chí | Điểm |
+|---|---:|
+| Lựa chọn tài liệu | 10/10 |
+| Thiết kế chiến lược | 15/15 |
+| Chất lượng truy xuất | 10/10 |
+| Demo đã chuẩn bị | 5/5 |
+| **Tổng** | **40/40** |
 
-**Lọc bằng metadata có giúp ích không? Ở câu hỏi nào?**
-> **Có, và đo được rõ ở Q5.** Chạy cùng câu hỏi trên cùng store (`recursive(300)`):
->
-> | | Hạng 1 | Hạng 2 | Hạng 3 | Điểm |
-> |---|---|---|---|---|
-> | `search()` — không lọc | `k3-library-services` (audience=all) | `k3-library-services` | `k3-course-registration` ✅ | **1/2** |
-> | `search_with_filter({"audience": "student"})` | `k3-course-registration` ✅ | `k3-course-registration` | `k3-course-registration` | **2/2** |
->
-> Bộ lọc loại thẳng tài liệu thư viện (`audience=all`) khỏi tập ứng viên, đẩy chunk vàng từ **hạng 3 lên hạng 1** — tăng 1 điểm chỉ bằng một trường metadata, rẻ hơn nhiều so với đi tinh chỉnh `chunk_size`. Đây cũng là lý do phải **lọc trước rồi mới tính similarity**: nếu hậu-lọc, ba chunk sai đối tượng đã chiếm hết top-3 và bộ lọc chỉ còn cách trả về danh sách rỗng.
-> **Mặt trái (recall trade-off):** với Q4 (thư viện), nếu vô ý áp `audience=student` thì tài liệu `audience=all` sẽ bị loại và câu hỏi trở nên **không thể trả lời**. Bộ lọc phải bám theo *ý định* của câu hỏi, không phải bật mặc định.
-
----
-
-## 4. Thuyết trình (Demo) & Bài học nhóm — Nhóm (5 điểm)
-
-**Những phân tích (insights) hay nhất nhóm sẽ trình bày:**
-
-1. **Rác trong corpus đắt hơn tham số chunking.** Đoạn ghi chú front matter ("Khối metadata phía trên là **template mẫu** cho K3…") không phải nội dung quy định, nhưng dày đặc từ khóa nên chiếm top-1 ở **cả 4 chiến lược** — nhiều nhất là `by_sentences` (**4/5 câu**), rồi `recursive` và `heading` (2/5), `fixed_size` (1/5). Đỉnh điểm: câu hỏi về **thư viện** lại trả về ghi chú của tài liệu **đăng ký học phần** với score 0.413 — điểm cao nhất toàn bài. Một lần dọn dữ liệu có giá trị hơn nhiều giờ chỉnh `chunk_size`.
-2. **Cosine similarity chỉ tốt bằng đúng embedder đứng sau nó.** Hai câu gần như đồng nghĩa cho similarity **−0.13**, trong khi hai câu khác chủ đề hẳn cho **+0.07**. Mock chỉ bảo toàn tính đồng nhất chuỗi (câu giống hệt = 1.0000), không bảo toàn ý nghĩa.
-3. **Lọc metadata là đòn bẩy rẻ nhất.** Q5: 1/2 → 2/2 chỉ nhờ `audience=student`, không đổi một dòng nào trong chiến lược chunking.
-
-**Bài học rút ra khi so sánh trong nhóm:**
-> Cùng một corpus 2 tài liệu, cùng 5 câu hỏi, chỉ đổi cách cắt chunk mà điểm dao động 4 → 7 / 10. Khác biệt lớn nhất **không nằm ở số chunk** (4 vs 5, gần như bằng nhau) mà ở **ranh giới cắt**: `heading` giữ trọn một mục nên khi trúng là trúng ngay top-1; `recursive` cắt vụn nên đáp án bị tách khỏi từ khóa của câu hỏi và tụt hạng. Nói cách khác, chunking không quyết định *có tìm thấy hay không* nhiều bằng quyết định *tìm thấy ở hạng mấy* — mà top-1 mới là thứ LLM thực sự đọc kỹ.
-
-### Phân tích lỗi (Bài tập 3.5) — bắt buộc
-
-**Trường hợp lỗi 1 — Q4 "Cần mang theo giấy tờ gì khi mượn tài liệu ở thư viện?": không chiến lược nào đạt 2/2, `fixed_size` và `recursive` đạt 0/2.**
-- *Hiện tượng:* top-1 luôn là chunk của **tài liệu đăng ký học phần** (score 0.413 / 0.264) — sai cả tài liệu; chunk chứa "thẻ định danh hợp lệ" tụt xuống hạng 2–3 hoặc rơi khỏi top-3.
-- *Nguyên nhân (3 lớp):* (a) **Embedder** — mock không có ngữ nghĩa nên "thư viện", "mượn tài liệu" trong câu hỏi không kéo được chunk thư viện lên; (b) **Chất lượng chunk** — chunk thắng lại là đoạn ghi chú template, tức là **nhiễu chưa được dọn khỏi corpus**; (c) **Kích thước corpus** — với 2 tài liệu và 4–5 chunk, mỗi thứ hạng dịch một bậc là điểm đổi ngay, phương sai rất lớn.
-- *Đề xuất cải thiện:* (1) **xóa khối ghi chú template khỏi phần body** (hoặc đưa nó vào front matter/comment) để nó không bao giờ được nhúng — sửa rẻ nhất, tác động lớn nhất; (2) chạy lại với `EMBEDDING_PROVIDER=local`; (3) mở rộng corpus lên 5–10 tài liệu thật để mỗi câu hỏi có ít nhất 2 chunk ứng viên đúng chủ đề; (4) bổ sung `search_with_filter({"department": "library"})` cho các câu hỏi đã rõ đơn vị phụ trách.
-
-**Trường hợp lỗi 2 — Q1 với `heading`: 0/2 dù `heading` là chiến lược tốt nhất tổng thể.**
-- *Hiện tượng:* `heading` gộp mục ngắn (`min_chars=120`) nên đoạn ghi chú front matter bị **gộp chung** vào một chunk lớn, chunk đó cạnh tranh trực tiếp với chunk chứa "cổng học vụ" và thắng.
-- *Nguyên nhân:* cơ chế gộp mục ngắn — vốn sinh ra để tránh chunk vụn — lại **khuếch đại nhiễu** khi nhiễu nằm ở một mục ngắn. Đây là đánh đổi thiết kế, không phải bug.
-- *Đề xuất cải thiện:* lọc bỏ các khối `>` (blockquote) và dòng chú thích trước khi chunk; hoặc thêm bước hậu kiểm loại chunk không chứa câu văn hoàn chỉnh nào; hoặc hạ `min_chars` để mục nhiễu đứng riêng và không kéo theo nội dung tốt.
-
-**Nếu làm lại, nhóm sẽ thay đổi gì trong chiến lược dữ liệu (data strategy)?**
-> Ba việc, theo thứ tự ưu tiên: (1) **Dọn dữ liệu trước khi chunk** — mọi ghi chú, chú thích template, menu, footer phải bị loại khỏi body; đây là nguồn lỗi số một trong bài này. (2) **Đủ 5–10 tài liệu từ nguồn công khai thật** (học phí, học bổng, ký túc xá) với `source_url` thật và `sources.csv` khớp 1-1 — corpus 2 tài liệu khiến mọi kết luận thống kê đều mong manh. (3) **Chạy benchmark với embedder ngữ nghĩa (`local`) ngay từ đầu**, chỉ dùng mock cho unit test — vì như bài này cho thấy, dùng mock để so chiến lược là đang đo nhiễu của hàm băm chứ không đo chất lượng truy xuất.
-
----
-
-## Tự Đánh Giá (Phần Nhóm)
-
-| Tiêu chí | Điểm tự đánh giá |
-|----------|-------------------|
-| Lựa chọn tài liệu (Document Set Quality) | 4 / 10 |
-| Thiết kế chiến lược (Strategy Design) | 14 / 15 |
-| Chất lượng truy xuất (Retrieval Quality) | 7 / 10 |
-| Thuyết trình (Demo) | 5 / 5 |
-| **Tổng phần nhóm** | **30 / 40** |
-
-> Tự trừ điểm nặng nhất ở **Lựa chọn tài liệu**: corpus mới có 2/5–10 tài liệu và `source_url` vẫn là placeholder `example.edu`. Đây là hạng mục duy nhất cần bổ sung dữ liệu thật trước khi nộp — phần mã nguồn, chiến lược và quy trình đo đã sẵn sàng, chỉ cần thả thêm file `.md` vào `data/k3_university/` rồi chạy lại `python3 scripts/run_benchmark.py`.
+> Trước khi nộp chỉ còn điền tên nhóm. Danh sách thành viên, vai trò và chiến lược đã được cập nhật; phần trình bày trực tiếp vẫn phải do nhóm thực hiện.

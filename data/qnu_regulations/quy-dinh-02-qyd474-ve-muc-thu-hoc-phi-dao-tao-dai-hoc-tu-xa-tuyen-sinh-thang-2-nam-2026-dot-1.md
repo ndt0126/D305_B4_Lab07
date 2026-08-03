@@ -1,20 +1,23 @@
 ---
 doc_id: "quy-dinh-02-qyd474-ve-muc-thu-hoc-phi-dao-tao-dai-hoc-tu-xa-tuyen-sinh-thang-2-nam-2026-dot-1"
-title: "QyĐ474 - Về mức thu học phí đào tạo đại học từ xa tuyền sinh tháng 2 năm 2026 (Đợt 1)"
+title: "QyĐ474 - Về mức thu học phí đào tạo đại học từ xa tuyển sinh tháng 2 năm 2026 (Đợt 1)"
 source_url: "https://www.qnu.edu.vn/vi/tuyen-sinh-1763/qyd474-ve-muc-thu-hoc-phi-dao-tao-dai-hoc-tu-xa-tuyen-sinh-thang-2-nam-2026-dot-1"
 retrieved_at: "2026-08-03"
 document_version: "not-stated"
 audience: "student"
-university: "Truong Dai hoc Quy Nhon"
+university: "Trường Đại học Quy Nhơn"
 category: "regulation"
+department: "finance"
+program: "distance-learning"
+topic: "tuition"
 language: "vi"
 ---
 
-# QyĐ474 - Về mức thu học phí đào tạo đại học từ xa tuyền sinh tháng 2 năm 2026 (Đợt 1)
+# QyĐ474 - Về mức thu học phí đào tạo đại học từ xa tuyển sinh tháng 2 năm 2026 (Đợt 1)
 
 Số: 474/QyĐ-ĐHQN
 
-Về mức thu học phí đào tạo đại học từ xa tuyền sinh tháng 2 năm 2026 (Đợt 1)
+Về mức thu học phí đào tạo đại học từ xa tuyển sinh tháng 2 năm 2026 (Đợt 1)
 
 Ngày phát hành: Gia Lai, ngày 05 tháng 02 năm 2026
 

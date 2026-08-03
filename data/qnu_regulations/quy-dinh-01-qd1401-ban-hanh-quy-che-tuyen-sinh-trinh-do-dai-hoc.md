@@ -5,8 +5,11 @@ source_url: "https://www.qnu.edu.vn/vi/dai-hoc-chinh-quy-1764/qd1401-ban-hanh-qu
 retrieved_at: "2026-08-03"
 document_version: "not-stated"
 audience: "student"
-university: "Truong Dai hoc Quy Nhon"
+university: "Trường Đại học Quy Nhơn"
 category: "regulation"
+department: "academic-affairs"
+program: "undergraduate"
+topic: "admissions"
 language: "vi"
 ---
 

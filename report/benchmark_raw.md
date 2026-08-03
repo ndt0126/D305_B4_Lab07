@@ -1,183 +1,175 @@
-# Kết quả đo thô — Lab 07 (K3), Giai đoạn 2
+# Kết quả benchmark có thể tái lập — Lab 7 K3
 
-> File này do `scripts/run_benchmark.py` sinh tự động. Không sửa tay.
+> Sinh tự động bởi `scripts/run_benchmark.py`; không sửa tay.
 
-- Backend nhúng: **mock embeddings fallback**
-- Thư mục dữ liệu: `data/k3_university`
-- Số tài liệu trong corpus: **2**
+- Backend: **sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2**
+- Corpus: `data\qnu_regulations` — **5 tài liệu**
+- Tổng ký tự phần body: **9513**
 
-> **CẢNH BÁO PHƯƠNG PHÁP:** mock embedding là hàm băm MD5 -> vector, **không mang ngữ nghĩa**. Mọi điểm số dưới đây là thật nhưng chỉ dùng để kiểm chứng đường ống (pipeline) chạy đúng, KHÔNG dùng để kết luận chiến lược chunking nào tốt hơn về mặt ngữ nghĩa. Đặt `EMBEDDING_PROVIDER=local` để đo lại.
+## A. Baseline trên 3 tài liệu đầu tiên
 
-## A. Baseline — ChunkingStrategyComparator
+| Tài liệu | Ký tự | Chiến lược | count | avg | min | max |
+|---|---:|---|---:|---:|---:|---:|
+| `quy-dinh-01-qd1401-ban-hanh-quy-che-tuyen-sinh-trinh-do-dai-hoc` | 1379 | `fixed_size` | 3 | 493.0 | 479 | 500 |
+| `quy-dinh-01-qd1401-ban-hanh-quy-che-tuyen-sinh-trinh-do-dai-hoc` | 1379 | `by_sentences` | 3 | 454.3 | 190 | 957 |
+| `quy-dinh-01-qd1401-ban-hanh-quy-che-tuyen-sinh-trinh-do-dai-hoc` | 1379 | `recursive` | 4 | 342.2 | 206 | 424 |
+| `quy-dinh-02-qyd474-ve-muc-thu-hoc-phi-dao-tao-dai-hoc-tu-xa-tuyen-sinh-thang-2-nam-2026-dot-1` | 1340 | `fixed_size` | 3 | 480.0 | 440 | 500 |
+| `quy-dinh-02-qyd474-ve-muc-thu-hoc-phi-dao-tao-dai-hoc-tu-xa-tuyen-sinh-thang-2-nam-2026-dot-1` | 1340 | `by_sentences` | 2 | 665.5 | 256 | 1075 |
+| `quy-dinh-02-qyd474-ve-muc-thu-hoc-phi-dao-tao-dai-hoc-tu-xa-tuyen-sinh-thang-2-nam-2026-dot-1` | 1340 | `recursive` | 3 | 444.3 | 416 | 472 |
+| `quy-dinh-03-qyd828-ve-muc-thu-hoc-phi-nam-hoc-2024-2025-doi-voi-he-dao-tao-vua-lam-vua-hoc-to-chuc-tai-truong-ap-dung-cho-khoa-34-nganh-quan-ly-dat-dai-tuyen-sinh-nam-2024` | 1486 | `fixed_size` | 4 | 409.0 | 136 | 500 |
+| `quy-dinh-03-qyd828-ve-muc-thu-hoc-phi-nam-hoc-2024-2025-doi-voi-he-dao-tao-vua-lam-vua-hoc-to-chuc-tai-truong-ap-dung-cho-khoa-34-nganh-quan-ly-dat-dai-tuyen-sinh-nam-2024` | 1486 | `by_sentences` | 2 | 740.5 | 125 | 1356 |
+| `quy-dinh-03-qyd828-ve-muc-thu-hoc-phi-nam-hoc-2024-2025-doi-voi-he-dao-tao-vua-lam-vua-hoc-to-chuc-tai-truong-ap-dung-cho-khoa-34-nganh-quan-ly-dat-dai-tuyen-sinh-nam-2024` | 1486 | `recursive` | 4 | 369.2 | 216 | 478 |
 
-| Tài liệu | Số ký tự | Chiến lược | count | avg_length | min | max |
-|---|---|---|---|---|---|---|
-| k3-course-registration | 646 | `fixed_size` | 3 | 235.3 | 106 | 300 |
-| k3-course-registration | 646 | `by_sentences` | 2 | 321.5 | 277 | 366 |
-| k3-course-registration | 646 | `recursive` | 3 | 214.0 | 167 | 294 |
-| k3-library-services | 481 | `fixed_size` | 2 | 255.5 | 211 | 300 |
-| k3-library-services | 481 | `by_sentences` | 2 | 239.0 | 115 | 363 |
-| k3-library-services | 481 | `recursive` | 2 | 239.5 | 202 | 277 |
-| chunking_experiment_report (văn bản dài để đối chiếu) | 2282 | `fixed_size` | 9 | 280.2 | 122 | 300 |
-| chunking_experiment_report (văn bản dài để đối chiếu) | 2282 | `by_sentences` | 5 | 454.6 | 336 | 620 |
-| chunking_experiment_report (văn bản dài để đối chiếu) | 2282 | `recursive` | 15 | 150.2 | 11 | 294 |
+## B. Benchmark: đúng 5 câu hỏi × 4 chiến lược
 
-## B. 5 câu hỏi đánh giá x 4 chiến lược (top-3)
+### `heading(level=1..3)` — 6 chunks
 
-### Chiến lược `fixed_size(300/50)` — 5 chunk
+| Q | Filter | Hạng | doc_id | score | Gold? | Trích đoạn |
+|---:|---|---:|---|---:|---|---|
+| 1 | `-` | 1 | `quy-dinh-01-qd1401-ban-hanh-quy-che-tuyen-sinh-trinh-do-dai-hoc` | 0.4893 | Có | # QĐ1401 - Ban hành Quy chế tuyển sinh trình độ đại học Số: 1401/QĐ - ĐHQN Ban hành Quy ch… |
+| 1 | `-` | 2 | `quy-dinh-04-tb1525-ve-thoi-gian-hoc-tap-va-nop-hoc-phi-hoc-ky-2-dot-2-doi-voi-hoc-vien-cao-hoc-khoa-28b-12-2025-2027` | 0.3995 | Không | # TB1525 - Về thời gian học tập và nộp học phí Học kỳ 2 (Đợt 2) đối với học viên cao học K… |
+| 1 | `-` | 3 | `quy-dinh-05-tb209-ve-thoi-gian-nghi-tet-nguyen-dan-binh-ngo-nam-2026-doi-voi-sinh-vien` | 0.3240 | Không | # TB209 - Về thời gian nghỉ Tết Nguyên đán Bính Ngọ năm 2026 đối với sinh viên **Số:** 209… |
+| 1 | **Điểm/Agent** |  |  |  | **2/2** | Có hiệu lực kể từ ngày ký và thay thế Quyết định số 1455/QĐ-ĐHQN ngày 21/5/2025. |
+| 2 | `-` | 1 | `quy-dinh-02-qyd474-ve-muc-thu-hoc-phi-dao-tao-dai-hoc-tu-xa-tuyen-sinh-thang-2-nam-2026-dot-1` | 0.8007 | Có | # QyĐ474 - Về mức thu học phí đào tạo đại học từ xa tuyển sinh tháng 2 năm 2026 (Đợt 1) Số… |
+| 2 | `-` | 2 | `quy-dinh-01-qd1401-ban-hanh-quy-che-tuyen-sinh-trinh-do-dai-hoc` | 0.6562 | Không | # QĐ1401 - Ban hành Quy chế tuyển sinh trình độ đại học Số: 1401/QĐ - ĐHQN Ban hành Quy ch… |
+| 2 | `-` | 3 | `quy-dinh-04-tb1525-ve-thoi-gian-hoc-tap-va-nop-hoc-phi-hoc-ky-2-dot-2-doi-voi-hoc-vien-cao-hoc-khoa-28b-12-2025-2027` | 0.6454 | Không | # TB1525 - Về thời gian học tập và nộp học phí Học kỳ 2 (Đợt 2) đối với học viên cao học K… |
+| 2 | **Điểm/Agent** |  |  |  | **2/2** | Áp dụng cho tuyển sinh tháng 2 năm 2026, Đợt 1. |
+| 3 | `{'program': 'part-time'}` | 1 | `quy-dinh-03-qyd828-ve-muc-thu-hoc-phi-nam-hoc-2024-2025-doi-voi-he-dao-tao-vua-lam-vua-hoc-to-chuc-tai-truong-ap-dung-cho-khoa-34-nganh-quan-ly-dat-dai-tuyen-sinh-nam-2024` | 0.6047 | Có | # QyĐ828 - Về mức thu học phí năm học 2024-2025 đối với hệ đào tạo vừa làm vừa học tổ chức… |
+| 3 | **Điểm/Agent** |  |  |  | **2/2** | Áp dụng cho khóa 34 ngành Quản lý đất đai, tuyển sinh năm 2024. |
+| 4 | `{'program': 'graduate'}` | 1 | `quy-dinh-04-tb1525-ve-thoi-gian-hoc-tap-va-nop-hoc-phi-hoc-ky-2-dot-2-doi-voi-hoc-vien-cao-hoc-khoa-28b-12-2025-2027` | 0.7628 | Có | # TB1525 - Về thời gian học tập và nộp học phí Học kỳ 2 (Đợt 2) đối với học viên cao học K… |
+| 4 | **Điểm/Agent** |  |  |  | **2/2** | Nộp từ ngày 15/5/2026 đến hết ngày 02/8/2026. |
+| 5 | `{'audience': 'student'}` | 1 | `quy-dinh-05-tb209-ve-thoi-gian-nghi-tet-nguyen-dan-binh-ngo-nam-2026-doi-voi-sinh-vien` | 0.7740 | Có | # TB209 - Về thời gian nghỉ Tết Nguyên đán Bính Ngọ năm 2026 đối với sinh viên **Số:** 209… |
+| 5 | `{'audience': 'student'}` | 2 | `quy-dinh-02-qyd474-ve-muc-thu-hoc-phi-dao-tao-dai-hoc-tu-xa-tuyen-sinh-thang-2-nam-2026-dot-1` | 0.4562 | Không | # QyĐ474 - Về mức thu học phí đào tạo đại học từ xa tuyển sinh tháng 2 năm 2026 (Đợt 1) Số… |
+| 5 | `{'audience': 'student'}` | 3 | `quy-dinh-04-tb1525-ve-thoi-gian-hoc-tap-va-nop-hoc-phi-hoc-ky-2-dot-2-doi-voi-hoc-vien-cao-hoc-khoa-28b-12-2025-2027` | 0.4270 | Không | # TB1525 - Về thời gian học tập và nộp học phí Học kỳ 2 (Đợt 2) đối với học viên cao học K… |
+| 5 | **Điểm/Agent** |  |  |  | **2/2** | Nghỉ từ ngày 09/02/2026 đến hết ngày 01/03/2026. |
 
-| # | Câu hỏi | Hạng | doc_id | score | Liên quan? | Trích chunk |
-|---|---|---|---|---|---|---|
-| 1 | Sinh viên đăng ký học phần ở đâu và theo lịch nào? | 1 | k3-course-registration | 0.213 | CÓ | ark. # Đăng ký học phần (dữ liệu khởi động) Sinh viên đăng ký học phần… |
-| 1 |  | 2 | k3-course-registration | 0.077 | không | > Khối metadata phía trên là **template mẫu** cho K3 (bắt buộc: `audie… |
-| 1 |  | 3 | k3-library-services | 0.020 | không | học tập cho sinh viên, giảng viên và nhân viên. Người dùng cần mang th… |
-| 1 | **điểm câu này** | | | | **2/2** | |
-| 2 | Khi gặp lỗi trùng lịch thì sinh viên phải xử lý thế nào? | 1 | k3-course-registration | 0.151 | CÓ | ark. # Đăng ký học phần (dữ liệu khởi động) Sinh viên đăng ký học phần… |
-| 2 |  | 2 | k3-library-services | 0.121 | không | học tập cho sinh viên, giảng viên và nhân viên. Người dùng cần mang th… |
-| 2 |  | 3 | k3-course-registration | 0.094 | không | > Khối metadata phía trên là **template mẫu** cho K3 (bắt buộc: `audie… |
-| 2 | **điểm câu này** | | | | **2/2** | |
-| 3 | Yêu cầu ngoại lệ về học vụ được gửi qua kênh nào? | 1 | k3-library-services | 0.320 | không | > Khối metadata phía trên là **template mẫu** cho K3 — thay `source_ur… |
-| 3 |  | 2 | k3-course-registration | 0.177 | không | ark. # Đăng ký học phần (dữ liệu khởi động) Sinh viên đăng ký học phần… |
-| 3 |  | 3 | k3-course-registration | 0.103 | CÓ | h, sinh viên điều chỉnh lớp học phần trước thời hạn điều chỉnh được cô… |
-| 3 | **điểm câu này** | | | | **1/2** | |
-| 4 | Cần mang theo giấy tờ gì khi mượn tài liệu ở thư viện? | 1 | k3-course-registration | 0.133 | không | ark. # Đăng ký học phần (dữ liệu khởi động) Sinh viên đăng ký học phần… |
-| 4 |  | 2 | k3-course-registration | 0.040 | không | h, sinh viên điều chỉnh lớp học phần trước thời hạn điều chỉnh được cô… |
-| 4 |  | 3 | k3-library-services | -0.027 | không | > Khối metadata phía trên là **template mẫu** cho K3 — thay `source_ur… |
-| 4 | **điểm câu này** | | | | **0/2** | |
-| 5 | Quy định về học phần tiên quyết áp dụng cho sinh viên là gì? | 1 | k3-course-registration | -0.012 | không | h, sinh viên điều chỉnh lớp học phần trước thời hạn điều chỉnh được cô… |
-| 5 |  | 2 | k3-course-registration | -0.024 | CÓ | ark. # Đăng ký học phần (dữ liệu khởi động) Sinh viên đăng ký học phần… |
-| 5 |  | 3 | k3-course-registration | -0.043 | không | > Khối metadata phía trên là **template mẫu** cho K3 (bắt buộc: `audie… |
-| 5 | **điểm câu này** | | | | **1/2** | |
+**Tổng: 10/10; gold ở top-1: 5/5.**
 
-**Tổng điểm truy xuất `fixed_size(300/50)`: 6/10**
+### `recursive(600)` — 23 chunks
 
-*Ví dụ câu trả lời agent (Q1):* [DEMO LLM] Trả lời dựa trên 3 đoạn ngữ cảnh: [1] (nguồn: https://example.edu/hoc-vu/dang-ky-hoc-phan | score=0.213) ark. # Đăng ký học phần (dữ liệu khởi động) Sinh …
+| Q | Filter | Hạng | doc_id | score | Gold? | Trích đoạn |
+|---:|---|---:|---|---:|---|---|
+| 1 | `-` | 1 | `quy-dinh-01-qd1401-ban-hanh-quy-che-tuyen-sinh-trinh-do-dai-hoc` | 0.5230 | Có | Căn cứ Luật Giáo dục đại học số 125/2025/QH15; Căn cứ Thông tư số 06/2026/TT-BGDĐT ngày 15… |
+| 1 | `-` | 2 | `quy-dinh-03-qyd828-ve-muc-thu-hoc-phi-nam-hoc-2024-2025-doi-voi-he-dao-tao-vua-lam-vua-hoc-to-chuc-tai-truong-ap-dung-cho-khoa-34-nganh-quan-ly-dat-dai-tuyen-sinh-nam-2024` | 0.5055 | Không | Căn cứ quy định về quyền hạn, trách nhiệm của Hiệu trưởng theo Quy chể tổ chức và hoạt độn… |
+| 1 | `-` | 3 | `quy-dinh-01-qd1401-ban-hanh-quy-che-tuyen-sinh-trinh-do-dai-hoc` | 0.4893 | Không | # QĐ1401 - Ban hành Quy chế tuyển sinh trình độ đại học Số: 1401/QĐ - ĐHQN Ban hành Quy ch… |
+| 1 | **Điểm/Agent** |  |  |  | **2/2** | Có hiệu lực kể từ ngày ký và thay thế Quyết định số 1455/QĐ-ĐHQN ngày 21/5/2025. |
+| 2 | `-` | 1 | `quy-dinh-02-qyd474-ve-muc-thu-hoc-phi-dao-tao-dai-hoc-tu-xa-tuyen-sinh-thang-2-nam-2026-dot-1` | 0.8007 | Có | # QyĐ474 - Về mức thu học phí đào tạo đại học từ xa tuyển sinh tháng 2 năm 2026 (Đợt 1) Số… |
+| 2 | `-` | 2 | `quy-dinh-04-tb1525-ve-thoi-gian-hoc-tap-va-nop-hoc-phi-hoc-ky-2-dot-2-doi-voi-hoc-vien-cao-hoc-khoa-28b-12-2025-2027` | 0.7053 | Không | Căn cứ Kế hoạch đào tạo trình độ thạc sĩ khoá 28B (12/2025-2027) được ban hành kèm theo Qu… |
+| 2 | `-` | 3 | `quy-dinh-01-qd1401-ban-hanh-quy-che-tuyen-sinh-trinh-do-dai-hoc` | 0.7019 | Không | Căn cứ Luật Giáo dục đại học số 125/2025/QH15; Căn cứ Thông tư số 06/2026/TT-BGDĐT ngày 15… |
+| 2 | **Điểm/Agent** |  |  |  | **2/2** | Áp dụng cho tuyển sinh tháng 2 năm 2026, Đợt 1. |
+| 3 | `{'program': 'part-time'}` | 1 | `quy-dinh-03-qyd828-ve-muc-thu-hoc-phi-nam-hoc-2024-2025-doi-voi-he-dao-tao-vua-lam-vua-hoc-to-chuc-tai-truong-ap-dung-cho-khoa-34-nganh-quan-ly-dat-dai-tuyen-sinh-nam-2024` | 0.5970 | Có | # QyĐ828 - Về mức thu học phí năm học 2024-2025 đối với hệ đào tạo vừa làm vừa học tổ chức… |
+| 3 | `{'program': 'part-time'}` | 2 | `quy-dinh-03-qyd828-ve-muc-thu-hoc-phi-nam-hoc-2024-2025-doi-voi-he-dao-tao-vua-lam-vua-hoc-to-chuc-tai-truong-ap-dung-cho-khoa-34-nganh-quan-ly-dat-dai-tuyen-sinh-nam-2024` | 0.5816 | Không | I. Mức học phí đào tạo Liên thông vừa làm vừa học (hệ 2 năm - 3 năm) II. Hiệu lực thi hành… |
+| 3 | `{'program': 'part-time'}` | 3 | `quy-dinh-03-qyd828-ve-muc-thu-hoc-phi-nam-hoc-2024-2025-doi-voi-he-dao-tao-vua-lam-vua-hoc-to-chuc-tai-truong-ap-dung-cho-khoa-34-nganh-quan-ly-dat-dai-tuyen-sinh-nam-2024` | 0.5596 | Không | Căn cứ Nghị định số 97/2023/NĐ-CP ngày 31/12/2023 của Thủ tướng Chính phủ sửa đổi, bổ sung… |
+| 3 | **Điểm/Agent** |  |  |  | **2/2** | Áp dụng cho khóa 34 ngành Quản lý đất đai, tuyển sinh năm 2024. |
+| 4 | `{'program': 'graduate'}` | 1 | `quy-dinh-04-tb1525-ve-thoi-gian-hoc-tap-va-nop-hoc-phi-hoc-ky-2-dot-2-doi-voi-hoc-vien-cao-hoc-khoa-28b-12-2025-2027` | 0.7750 | Không | Nhà trường đề nghị học viên cao học khóa 28B thực hiện đúng thời gian học, thi kết thúc họ… |
+| 4 | `{'program': 'graduate'}` | 2 | `quy-dinh-04-tb1525-ve-thoi-gian-hoc-tap-va-nop-hoc-phi-hoc-ky-2-dot-2-doi-voi-hoc-vien-cao-hoc-khoa-28b-12-2025-2027` | 0.7271 | Không | # TB1525 - Về thời gian học tập và nộp học phí Học kỳ 2 (Đợt 2) đối với học viên cao học K… |
+| 4 | `{'program': 'graduate'}` | 3 | `quy-dinh-04-tb1525-ve-thoi-gian-hoc-tap-va-nop-hoc-phi-hoc-ky-2-dot-2-doi-voi-hoc-vien-cao-hoc-khoa-28b-12-2025-2027` | 0.6778 | Không | Căn cứ Kế hoạch đào tạo trình độ thạc sĩ khoá 28B (12/2025-2027) được ban hành kèm theo Qu… |
+| 4 | **Điểm/Agent** |  |  |  | **0/2** | Không đủ thông tin trong ngữ cảnh đã truy xuất. |
+| 5 | `{'audience': 'student'}` | 1 | `quy-dinh-05-tb209-ve-thoi-gian-nghi-tet-nguyen-dan-binh-ngo-nam-2026-doi-voi-sinh-vien` | 0.8627 | Có | 1. Sinh viên nghỉ Tết Nguyên đán Bính Ngọ năm 2026 trong 03 tuần, từ ngày 09 tháng 02 năm … |
+| 5 | `{'audience': 'student'}` | 2 | `quy-dinh-05-tb209-ve-thoi-gian-nghi-tet-nguyen-dan-binh-ngo-nam-2026-doi-voi-sinh-vien` | 0.7740 | Không | # TB209 - Về thời gian nghỉ Tết Nguyên đán Bính Ngọ năm 2026 đối với sinh viên **Số:** 209… |
+| 5 | `{'audience': 'student'}` | 3 | `quy-dinh-04-tb1525-ve-thoi-gian-hoc-tap-va-nop-hoc-phi-hoc-ky-2-dot-2-doi-voi-hoc-vien-cao-hoc-khoa-28b-12-2025-2027` | 0.5101 | Không | 2. Đối với ngành Toán giải tích, thực hiện chương trình đào tạo Học kỳ 3 (Đợt 3) cùng với … |
+| 5 | **Điểm/Agent** |  |  |  | **2/2** | Nghỉ từ ngày 09/02/2026 đến hết ngày 01/03/2026. |
 
-### Chiến lược `by_sentences(2)` — 5 chunk
+**Tổng: 8/10; gold ở top-1: 4/5.**
 
-| # | Câu hỏi | Hạng | doc_id | score | Liên quan? | Trích chunk |
-|---|---|---|---|---|---|---|
-| 1 | Sinh viên đăng ký học phần ở đâu và theo lịch nào? | 1 | k3-course-registration | 0.043 | không | > Khối metadata phía trên là **template mẫu** cho K3 (bắt buộc: `audie… |
-| 1 |  | 2 | k3-library-services | 0.041 | không | Người dùng cần mang thẻ định danh hợp lệ khi sử dụng dịch vụ mượn. Nhó… |
-| 1 |  | 3 | k3-course-registration | 0.026 | CÓ | # Đăng ký học phần (dữ liệu khởi động) Sinh viên đăng ký học phần tron… |
-| 1 | **điểm câu này** | | | | **1/2** | |
-| 2 | Khi gặp lỗi trùng lịch thì sinh viên phải xử lý thế nào? | 1 | k3-library-services | -0.013 | không | Người dùng cần mang thẻ định danh hợp lệ khi sử dụng dịch vụ mượn. Nhó… |
-| 2 |  | 2 | k3-library-services | -0.056 | không | > Khối metadata phía trên là **template mẫu** cho K3 — thay `source_ur… |
-| 2 |  | 3 | k3-course-registration | -0.079 | không | > Khối metadata phía trên là **template mẫu** cho K3 (bắt buộc: `audie… |
-| 2 | **điểm câu này** | | | | **0/2** | |
-| 3 | Yêu cầu ngoại lệ về học vụ được gửi qua kênh nào? | 1 | k3-library-services | 0.084 | không | > Khối metadata phía trên là **template mẫu** cho K3 — thay `source_ur… |
-| 3 |  | 2 | k3-course-registration | 0.079 | không | > Khối metadata phía trên là **template mẫu** cho K3 (bắt buộc: `audie… |
-| 3 |  | 3 | k3-course-registration | -0.055 | CÓ | Khi gặp lỗi trùng lịch, sinh viên điều chỉnh lớp học phần trước thời h… |
-| 3 | **điểm câu này** | | | | **1/2** | |
-| 4 | Cần mang theo giấy tờ gì khi mượn tài liệu ở thư viện? | 1 | k3-course-registration | 0.413 | không | > Khối metadata phía trên là **template mẫu** cho K3 (bắt buộc: `audie… |
-| 4 |  | 2 | k3-library-services | 0.334 | CÓ | Người dùng cần mang thẻ định danh hợp lệ khi sử dụng dịch vụ mượn. Nhó… |
-| 4 |  | 3 | k3-course-registration | 0.199 | không | Khi gặp lỗi trùng lịch, sinh viên điều chỉnh lớp học phần trước thời h… |
-| 4 | **điểm câu này** | | | | **1/2** | |
-| 5 | Quy định về học phần tiên quyết áp dụng cho sinh viên là gì? | 1 | k3-course-registration | -0.100 | không | > Khối metadata phía trên là **template mẫu** cho K3 (bắt buộc: `audie… |
-| 5 |  | 2 | k3-course-registration | -0.120 | CÓ | # Đăng ký học phần (dữ liệu khởi động) Sinh viên đăng ký học phần tron… |
-| 5 |  | 3 | k3-course-registration | -0.123 | không | Khi gặp lỗi trùng lịch, sinh viên điều chỉnh lớp học phần trước thời h… |
-| 5 | **điểm câu này** | | | | **1/2** | |
+### `fixed_size(500/80)` — 25 chunks
 
-**Tổng điểm truy xuất `by_sentences(2)`: 4/10**
+| Q | Filter | Hạng | doc_id | score | Gold? | Trích đoạn |
+|---:|---|---:|---|---:|---|---|
+| 1 | `-` | 1 | `quy-dinh-01-qd1401-ban-hanh-quy-che-tuyen-sinh-trinh-do-dai-hoc` | 0.5696 | Có | QUYẾT ĐỊNH: Điều 1. Ban hành kèm theo Quyết định này Quy chế tuyển sinh trình độ đại học c… |
+| 1 | `-` | 2 | `quy-dinh-01-qd1401-ban-hanh-quy-che-tuyen-sinh-trinh-do-dai-hoc` | 0.5155 | Không | ơn vị, tổ chức và cá nhân liên quan chịu trách nhiệm thi hành Quyết định này./. Quy chế tu… |
+| 1 | `-` | 3 | `quy-dinh-01-qd1401-ban-hanh-quy-che-tuyen-sinh-trinh-do-dai-hoc` | 0.4893 | Không | # QĐ1401 - Ban hành Quy chế tuyển sinh trình độ đại học Số: 1401/QĐ - ĐHQN Ban hành Quy ch… |
+| 1 | **Điểm/Agent** |  |  |  | **2/2** | Có hiệu lực kể từ ngày ký và thay thế Quyết định số 1455/QĐ-ĐHQN ngày 21/5/2025. |
+| 2 | `-` | 1 | `quy-dinh-02-qyd474-ve-muc-thu-hoc-phi-dao-tao-dai-hoc-tu-xa-tuyen-sinh-thang-2-nam-2026-dot-1` | 0.8007 | Có | # QyĐ474 - Về mức thu học phí đào tạo đại học từ xa tuyển sinh tháng 2 năm 2026 (Đợt 1) Số… |
+| 2 | `-` | 2 | `quy-dinh-04-tb1525-ve-thoi-gian-hoc-tap-va-nop-hoc-phi-hoc-ky-2-dot-2-doi-voi-hoc-vien-cao-hoc-khoa-28b-12-2025-2027` | 0.7477 | Không | của Hiệu trưởng; Chương trình đào tạo trình độ thạc sĩ của khóa 28B; Quy định số 2114/QyĐ-… |
+| 2 | `-` | 3 | `quy-dinh-02-qyd474-ve-muc-thu-hoc-phi-dao-tao-dai-hoc-tu-xa-tuyen-sinh-thang-2-nam-2026-dot-1` | 0.7420 | Có | h giá dịch vụ đào tạo của Trường Đại học Quy Nhơn. Hiệu trưởng Trường Đại học Quy Nhơn quy… |
+| 2 | **Điểm/Agent** |  |  |  | **2/2** | Áp dụng cho tuyển sinh tháng 2 năm 2026, Đợt 1. |
+| 3 | `{'program': 'part-time'}` | 1 | `quy-dinh-03-qyd828-ve-muc-thu-hoc-phi-nam-hoc-2024-2025-doi-voi-he-dao-tao-vua-lam-vua-hoc-to-chuc-tai-truong-ap-dung-cho-khoa-34-nganh-quan-ly-dat-dai-tuyen-sinh-nam-2024` | 0.6521 | Không | ọc phí đối với cơ sở giáo dục thuộc hệ thống giáo dục quốc dân và chính sách miễn, giảm họ… |
+| 3 | `{'program': 'part-time'}` | 2 | `quy-dinh-03-qyd828-ve-muc-thu-hoc-phi-nam-hoc-2024-2025-doi-voi-he-dao-tao-vua-lam-vua-hoc-to-chuc-tai-truong-ap-dung-cho-khoa-34-nganh-quan-ly-dat-dai-tuyen-sinh-nam-2024` | 0.6047 | Có | # QyĐ828 - Về mức thu học phí năm học 2024-2025 đối với hệ đào tạo vừa làm vừa học tổ chức… |
+| 3 | `{'program': 'part-time'}` | 3 | `quy-dinh-03-qyd828-ve-muc-thu-hoc-phi-nam-hoc-2024-2025-doi-voi-he-dao-tao-vua-lam-vua-hoc-to-chuc-tai-truong-ap-dung-cho-khoa-34-nganh-quan-ly-dat-dai-tuyen-sinh-nam-2024` | 0.5236 | Không | h về quyền hạn, trách nhiệm của Hiệu trưởng theo Quy chể tổ chức và hoạt động của Trường Đ… |
+| 3 | **Điểm/Agent** |  |  |  | **1/2** | Áp dụng cho khóa 34 ngành Quản lý đất đai, tuyển sinh năm 2024. |
+| 4 | `{'program': 'graduate'}` | 1 | `quy-dinh-04-tb1525-ve-thoi-gian-hoc-tap-va-nop-hoc-phi-hoc-ky-2-dot-2-doi-voi-hoc-vien-cao-hoc-khoa-28b-12-2025-2027` | 0.7628 | Không | # TB1525 - Về thời gian học tập và nộp học phí Học kỳ 2 (Đợt 2) đối với học viên cao học K… |
+| 4 | `{'program': 'graduate'}` | 2 | `quy-dinh-04-tb1525-ve-thoi-gian-hoc-tap-va-nop-hoc-phi-hoc-ky-2-dot-2-doi-voi-hoc-vien-cao-hoc-khoa-28b-12-2025-2027` | 0.7380 | Không | của Hiệu trưởng; Chương trình đào tạo trình độ thạc sĩ của khóa 28B; Quy định số 2114/QyĐ-… |
+| 4 | `{'program': 'graduate'}` | 3 | `quy-dinh-04-tb1525-ve-thoi-gian-hoc-tap-va-nop-hoc-phi-hoc-ky-2-dot-2-doi-voi-hoc-vien-cao-hoc-khoa-28b-12-2025-2027` | 0.7357 | Có | ọc phí Học kỳ 2 (Đợt 2): - Thời gian nộp học phí: từ ngày 15/5/2026 đến hết ngày 02/8/2026… |
+| 4 | **Điểm/Agent** |  |  |  | **1/2** | Nộp từ ngày 15/5/2026 đến hết ngày 02/8/2026. |
+| 5 | `{'audience': 'student'}` | 1 | `quy-dinh-05-tb209-ve-thoi-gian-nghi-tet-nguyen-dan-binh-ngo-nam-2026-doi-voi-sinh-vien` | 0.8547 | Có | ư sau: 1. Sinh viên nghỉ Tết Nguyên đán Bính Ngọ năm 2026 trong 03 tuần, từ ngày 09 tháng … |
+| 5 | `{'audience': 'student'}` | 2 | `quy-dinh-05-tb209-ve-thoi-gian-nghi-tet-nguyen-dan-binh-ngo-nam-2026-doi-voi-sinh-vien` | 0.7740 | Không | # TB209 - Về thời gian nghỉ Tết Nguyên đán Bính Ngọ năm 2026 đối với sinh viên **Số:** 209… |
+| 5 | `{'audience': 'student'}` | 3 | `quy-dinh-04-tb1525-ve-thoi-gian-hoc-tap-va-nop-hoc-phi-hoc-ky-2-dot-2-doi-voi-hoc-vien-cao-hoc-khoa-28b-12-2025-2027` | 0.5594 | Không | 8/2026 đến ngày 06/9/2026. 2. Đối với ngành Toán giải tích, thực hiện chương trình đào tạo… |
+| 5 | **Điểm/Agent** |  |  |  | **2/2** | Nghỉ từ ngày 09/02/2026 đến hết ngày 01/03/2026. |
 
-*Ví dụ câu trả lời agent (Q1):* [DEMO LLM] Trả lời dựa trên 3 đoạn ngữ cảnh: [1] (nguồn: https://example.edu/hoc-vu/dang-ky-hoc-phan | score=0.043) > Khối metadata phía trên là **template mẫu** cho…
+**Tổng: 8/10; gold ở top-1: 3/5.**
 
-### Chiến lược `recursive(300)` — 5 chunk
+### `by_sentences(3)` — 18 chunks
 
-| # | Câu hỏi | Hạng | doc_id | score | Liên quan? | Trích chunk |
-|---|---|---|---|---|---|---|
-| 1 | Sinh viên đăng ký học phần ở đâu và theo lịch nào? | 1 | k3-course-registration | 0.240 | CÓ | Sinh viên đăng ký học phần trong cổng học vụ theo lịch của từng học kỳ… |
-| 1 |  | 2 | k3-course-registration | 0.066 | không | > Khối metadata phía trên là **template mẫu** cho K3 (bắt buộc: `audie… |
-| 1 |  | 3 | k3-library-services | -0.058 | không | Thư viện cung cấp mượn tài liệu và không gian học tập cho sinh viên, g… |
-| 1 | **điểm câu này** | | | | **2/2** | |
-| 2 | Khi gặp lỗi trùng lịch thì sinh viên phải xử lý thế nào? | 1 | k3-course-registration | 0.220 | không | > Khối metadata phía trên là **template mẫu** cho K3 (bắt buộc: `audie… |
-| 2 |  | 2 | k3-library-services | 0.077 | không | > Khối metadata phía trên là **template mẫu** cho K3 — thay `source_ur… |
-| 2 |  | 3 | k3-library-services | 0.058 | không | Thư viện cung cấp mượn tài liệu và không gian học tập cho sinh viên, g… |
-| 2 | **điểm câu này** | | | | **0/2** | |
-| 3 | Yêu cầu ngoại lệ về học vụ được gửi qua kênh nào? | 1 | k3-library-services | 0.203 | không | Thư viện cung cấp mượn tài liệu và không gian học tập cho sinh viên, g… |
-| 3 |  | 2 | k3-library-services | 0.146 | không | > Khối metadata phía trên là **template mẫu** cho K3 — thay `source_ur… |
-| 3 |  | 3 | k3-course-registration | 0.132 | không | > Khối metadata phía trên là **template mẫu** cho K3 (bắt buộc: `audie… |
-| 3 | **điểm câu này** | | | | **0/2** | |
-| 4 | Cần mang theo giấy tờ gì khi mượn tài liệu ở thư viện? | 1 | k3-course-registration | 0.264 | không | > Khối metadata phía trên là **template mẫu** cho K3 (bắt buộc: `audie… |
-| 4 |  | 2 | k3-course-registration | 0.199 | không | Khi gặp lỗi trùng lịch, sinh viên điều chỉnh lớp học phần trước thời h… |
-| 4 |  | 3 | k3-course-registration | 0.171 | không | Sinh viên đăng ký học phần trong cổng học vụ theo lịch của từng học kỳ… |
-| 4 | **điểm câu này** | | | | **0/2** | |
-| 5 | Quy định về học phần tiên quyết áp dụng cho sinh viên là gì? | 1 | k3-course-registration | -0.088 | CÓ | Sinh viên đăng ký học phần trong cổng học vụ theo lịch của từng học kỳ… |
-| 5 |  | 2 | k3-course-registration | -0.123 | không | Khi gặp lỗi trùng lịch, sinh viên điều chỉnh lớp học phần trước thời h… |
-| 5 |  | 3 | k3-course-registration | -0.135 | không | > Khối metadata phía trên là **template mẫu** cho K3 (bắt buộc: `audie… |
-| 5 | **điểm câu này** | | | | **2/2** | |
+| Q | Filter | Hạng | doc_id | score | Gold? | Trích đoạn |
+|---:|---|---:|---|---:|---|---|
+| 1 | `-` | 1 | `quy-dinh-01-qd1401-ban-hanh-quy-che-tuyen-sinh-trinh-do-dai-hoc` | 0.6857 | Có | Điều 2. Quyết định này có hiệu lực kể từ ngày ký và thay thế Quyết định số 1455/QĐ-ĐHQN ng… |
+| 1 | `-` | 2 | `quy-dinh-01-qd1401-ban-hanh-quy-che-tuyen-sinh-trinh-do-dai-hoc` | 0.4893 | Không | # QĐ1401 - Ban hành Quy chế tuyển sinh trình độ đại học Số: 1401/QĐ - ĐHQN Ban hành Quy ch… |
+| 1 | `-` | 3 | `quy-dinh-04-tb1525-ve-thoi-gian-hoc-tap-va-nop-hoc-phi-hoc-ky-2-dot-2-doi-voi-hoc-vien-cao-hoc-khoa-28b-12-2025-2027` | 0.3995 | Không | # TB1525 - Về thời gian học tập và nộp học phí Học kỳ 2 (Đợt 2) đối với học viên cao học K… |
+| 1 | **Điểm/Agent** |  |  |  | **2/2** | Có hiệu lực kể từ ngày ký và thay thế Quyết định số 1455/QĐ-ĐHQN ngày 21/5/2025. |
+| 2 | `-` | 1 | `quy-dinh-02-qyd474-ve-muc-thu-hoc-phi-dao-tao-dai-hoc-tu-xa-tuyen-sinh-thang-2-nam-2026-dot-1` | 0.8007 | Có | # QyĐ474 - Về mức thu học phí đào tạo đại học từ xa tuyển sinh tháng 2 năm 2026 (Đợt 1) Số… |
+| 2 | `-` | 2 | `quy-dinh-04-tb1525-ve-thoi-gian-hoc-tap-va-nop-hoc-phi-hoc-ky-2-dot-2-doi-voi-hoc-vien-cao-hoc-khoa-28b-12-2025-2027` | 0.6968 | Không | Thời gian nộp, mức thu học phí Học kỳ 2 (Đợt 2): - Thời gian nộp học phí: từ ngày 15/5/202… |
+| 2 | `-` | 3 | `quy-dinh-04-tb1525-ve-thoi-gian-hoc-tap-va-nop-hoc-phi-hoc-ky-2-dot-2-doi-voi-hoc-vien-cao-hoc-khoa-28b-12-2025-2027` | 0.6742 | Không | Mọi thắc mắc về học phí liên hệ SĐT: (0256)3 546 882 (Phòng Kế hoạch-Tàchính) trong giờ hà… |
+| 2 | **Điểm/Agent** |  |  |  | **2/2** | Áp dụng cho tuyển sinh tháng 2 năm 2026, Đợt 1. |
+| 3 | `{'program': 'part-time'}` | 1 | `quy-dinh-03-qyd828-ve-muc-thu-hoc-phi-nam-hoc-2024-2025-doi-voi-he-dao-tao-vua-lam-vua-hoc-to-chuc-tai-truong-ap-dung-cho-khoa-34-nganh-quan-ly-dat-dai-tuyen-sinh-nam-2024` | 0.6047 | Có | # QyĐ828 - Về mức thu học phí năm học 2024-2025 đối với hệ đào tạo vừa làm vừa học tổ chức… |
+| 3 | `{'program': 'part-time'}` | 2 | `quy-dinh-03-qyd828-ve-muc-thu-hoc-phi-nam-hoc-2024-2025-doi-voi-he-dao-tao-vua-lam-vua-hoc-to-chuc-tai-truong-ap-dung-cho-khoa-34-nganh-quan-ly-dat-dai-tuyen-sinh-nam-2024` | 0.1147 | Không | Đăng nhập và xem trên E-Office 2.0: https://eoffice.qnu.edu.vn/app/view-document?xuLyId=b2… |
+| 3 | **Điểm/Agent** |  |  |  | **2/2** | Áp dụng cho khóa 34 ngành Quản lý đất đai, tuyển sinh năm 2024. |
+| 4 | `{'program': 'graduate'}` | 1 | `quy-dinh-04-tb1525-ve-thoi-gian-hoc-tap-va-nop-hoc-phi-hoc-ky-2-dot-2-doi-voi-hoc-vien-cao-hoc-khoa-28b-12-2025-2027` | 0.7780 | Không | Mọi thắc mắc về học phí liên hệ SĐT: (0256)3 546 882 (Phòng Kế hoạch-Tàchính) trong giờ hà… |
+| 4 | `{'program': 'graduate'}` | 2 | `quy-dinh-04-tb1525-ve-thoi-gian-hoc-tap-va-nop-hoc-phi-hoc-ky-2-dot-2-doi-voi-hoc-vien-cao-hoc-khoa-28b-12-2025-2027` | 0.7628 | Không | # TB1525 - Về thời gian học tập và nộp học phí Học kỳ 2 (Đợt 2) đối với học viên cao học K… |
+| 4 | `{'program': 'graduate'}` | 3 | `quy-dinh-04-tb1525-ve-thoi-gian-hoc-tap-va-nop-hoc-phi-hoc-ky-2-dot-2-doi-voi-hoc-vien-cao-hoc-khoa-28b-12-2025-2027` | 0.7374 | Có | Thời gian nộp, mức thu học phí Học kỳ 2 (Đợt 2): - Thời gian nộp học phí: từ ngày 15/5/202… |
+| 4 | **Điểm/Agent** |  |  |  | **1/2** | Nộp từ ngày 15/5/2026 đến hết ngày 02/8/2026. |
+| 5 | `{'audience': 'student'}` | 1 | `quy-dinh-05-tb209-ve-thoi-gian-nghi-tet-nguyen-dan-binh-ngo-nam-2026-doi-voi-sinh-vien` | 0.7740 | Có | # TB209 - Về thời gian nghỉ Tết Nguyên đán Bính Ngọ năm 2026 đối với sinh viên **Số:** 209… |
+| 5 | `{'audience': 'student'}` | 2 | `quy-dinh-04-tb1525-ve-thoi-gian-hoc-tap-va-nop-hoc-phi-hoc-ky-2-dot-2-doi-voi-hoc-vien-cao-hoc-khoa-28b-12-2025-2027` | 0.5423 | Không | Đối với ngành Toán giải tích, thực hiện chương trình đào tạo Học kỳ 3 (Đợt 3) cùng với ngà… |
+| 5 | `{'audience': 'student'}` | 3 | `quy-dinh-04-tb1525-ve-thoi-gian-hoc-tap-va-nop-hoc-phi-hoc-ky-2-dot-2-doi-voi-hoc-vien-cao-hoc-khoa-28b-12-2025-2027` | 0.4915 | Không | Thời gian nộp, mức thu học phí Học kỳ 2 (Đợt 2): - Thời gian nộp học phí: từ ngày 15/5/202… |
+| 5 | **Điểm/Agent** |  |  |  | **2/2** | Nghỉ từ ngày 09/02/2026 đến hết ngày 01/03/2026. |
 
-**Tổng điểm truy xuất `recursive(300)`: 4/10**
-
-*Ví dụ câu trả lời agent (Q1):* [DEMO LLM] Trả lời dựa trên 3 đoạn ngữ cảnh: [1] (nguồn: https://example.edu/hoc-vu/dang-ky-hoc-phan | score=0.240) Sinh viên đăng ký học phần trong cổng học vụ theo…
-
-### Chiến lược `heading(max=600)` — 4 chunk
-
-| # | Câu hỏi | Hạng | doc_id | score | Liên quan? | Trích chunk |
-|---|---|---|---|---|---|---|
-| 1 | Sinh viên đăng ký học phần ở đâu và theo lịch nào? | 1 | k3-course-registration | 0.043 | không | > Khối metadata phía trên là **template mẫu** cho K3 (bắt buộc: `audie… |
-| 1 |  | 2 | k3-library-services | -0.088 | không | > Khối metadata phía trên là **template mẫu** cho K3 — thay `source_ur… |
-| 1 |  | 3 | k3-library-services | -0.100 | không | Dịch vụ thư viện (dữ liệu khởi động) Thư viện cung cấp mượn tài liệu v… |
-| 1 | **điểm câu này** | | | | **0/2** | |
-| 2 | Khi gặp lỗi trùng lịch thì sinh viên phải xử lý thế nào? | 1 | k3-course-registration | 0.134 | CÓ | Đăng ký học phần (dữ liệu khởi động) Sinh viên đăng ký học phần trong … |
-| 2 |  | 2 | k3-course-registration | -0.079 | không | > Khối metadata phía trên là **template mẫu** cho K3 (bắt buộc: `audie… |
-| 2 |  | 3 | k3-library-services | -0.203 | không | > Khối metadata phía trên là **template mẫu** cho K3 — thay `source_ur… |
-| 2 | **điểm câu này** | | | | **2/2** | |
-| 3 | Yêu cầu ngoại lệ về học vụ được gửi qua kênh nào? | 1 | k3-course-registration | 0.086 | CÓ | Đăng ký học phần (dữ liệu khởi động) Sinh viên đăng ký học phần trong … |
-| 3 |  | 2 | k3-library-services | 0.084 | không | > Khối metadata phía trên là **template mẫu** cho K3 — thay `source_ur… |
-| 3 |  | 3 | k3-course-registration | 0.079 | không | > Khối metadata phía trên là **template mẫu** cho K3 (bắt buộc: `audie… |
-| 3 | **điểm câu này** | | | | **2/2** | |
-| 4 | Cần mang theo giấy tờ gì khi mượn tài liệu ở thư viện? | 1 | k3-course-registration | 0.413 | không | > Khối metadata phía trên là **template mẫu** cho K3 (bắt buộc: `audie… |
-| 4 |  | 2 | k3-course-registration | 0.096 | không | Đăng ký học phần (dữ liệu khởi động) Sinh viên đăng ký học phần trong … |
-| 4 |  | 3 | k3-library-services | -0.051 | CÓ | Dịch vụ thư viện (dữ liệu khởi động) Thư viện cung cấp mượn tài liệu v… |
-| 4 | **điểm câu này** | | | | **1/2** | |
-| 5 | Quy định về học phần tiên quyết áp dụng cho sinh viên là gì? | 1 | k3-course-registration | -0.020 | CÓ | Đăng ký học phần (dữ liệu khởi động) Sinh viên đăng ký học phần trong … |
-| 5 |  | 2 | k3-course-registration | -0.100 | không | > Khối metadata phía trên là **template mẫu** cho K3 (bắt buộc: `audie… |
-| 5 | **điểm câu này** | | | | **2/2** | |
-
-**Tổng điểm truy xuất `heading(max=600)`: 7/10**
-
-*Ví dụ câu trả lời agent (Q1):* [DEMO LLM] Trả lời dựa trên 3 đoạn ngữ cảnh: [1] (nguồn: https://example.edu/hoc-vu/dang-ky-hoc-phan | score=0.043) > Khối metadata phía trên là **template mẫu** cho…
+**Tổng: 9/10; gold ở top-1: 4/5.**
 
 ### Tổng hợp
 
-| Chiến lược | Điểm truy xuất /10 |
-|---|---|
-| `fixed_size(300/50)` | 6 |
-| `by_sentences(2)` | 4 |
-| `recursive(300)` | 4 |
-| `heading(max=600)` | 7 |
+| Chiến lược | Chunks | Top-1 đúng | Điểm /10 |
+|---|---:|---:|---:|
+| `heading(level=1..3)` | 6 | 5/5 | 10 |
+| `recursive(600)` | 23 | 4/5 | 8 |
+| `fixed_size(500/80)` | 25 | 3/5 | 8 |
+| `by_sentences(3)` | 18 | 4/5 | 9 |
 
-## C. search() vs search_with_filter() — cùng câu hỏi Q5
+## C. Tác động của metadata filter
 
-**search() — KHÔNG lọc** — điểm câu này: 1/2
+### Q3: `{'program': 'part-time'}`
 
-| Hạng | doc_id | audience | score | Liên quan? |
-|---|---|---|---|---|
-| 1 | k3-library-services | all | 0.003 | không |
-| 2 | k3-library-services | all | -0.081 | không |
-| 3 | k3-course-registration | student | -0.088 | CÓ |
+| Chế độ | Top-1 doc | Top-1 score | Điểm |
+|---|---|---:|---:|
+| Không lọc | `quy-dinh-01-qd1401-ban-hanh-quy-che-tuyen-sinh-trinh-do-dai-hoc` | 0.6766 | 0/2 |
+| Có lọc | `quy-dinh-03-qyd828-ve-muc-thu-hoc-phi-nam-hoc-2024-2025-doi-voi-he-dao-tao-vua-lam-vua-hoc-to-chuc-tai-truong-ap-dung-cho-khoa-34-nganh-quan-ly-dat-dai-tuyen-sinh-nam-2024` | 0.5970 | 2/2 |
 
-**search_with_filter(audience="student")** — điểm câu này: 2/2
+### Q5: `{'audience': 'student'}`
 
-| Hạng | doc_id | audience | score | Liên quan? |
-|---|---|---|---|---|
-| 1 | k3-course-registration | student | -0.088 | CÓ |
-| 2 | k3-course-registration | student | -0.123 | không |
-| 3 | k3-course-registration | student | -0.135 | không |
+| Chế độ | Top-1 doc | Top-1 score | Điểm |
+|---|---|---:|---:|
+| Không lọc | `quy-dinh-05-tb209-ve-thoi-gian-nghi-tet-nguyen-dan-binh-ngo-nam-2026-doi-voi-sinh-vien` | 0.8627 | 2/2 |
+| Có lọc | `quy-dinh-05-tb209-ve-thoi-gian-nghi-tet-nguyen-dan-binh-ngo-nam-2026-doi-voi-sinh-vien` | 0.8627 | 2/2 |
 
-## D. Dự đoán độ tương tự cosine (5 cặp câu)
+> Q5 dùng đúng bộ lọc bắt buộc của K3 (`audience=student`). Vì cả 5 tài liệu hiện đều hướng tới người học, bộ lọc này chủ yếu xác nhận contract. Q3 dùng `program=part-time` để minh họa bộ lọc có tính phân biệt.
 
-| Cặp | Câu A | Câu B | Dự đoán | compute_similarity | Đúng dự đoán? |
-|---|---|---|---|---|---|
-| 1 | Sinh viên đăng ký học phần trong cổng học vụ. | Việc đăng ký môn học được thực hiện trên cổng thông tin… | CAO | -0.1328 | SAI |
-| 2 | Thư viện cho mượn tài liệu và cung cấp không gian học t… | Người dùng cần mang thẻ định danh hợp lệ khi mượn tài l… | CAO | 0.0153 | SAI |
-| 3 | Sinh viên đăng ký học phần trong cổng học vụ. | Thư viện cho mượn tài liệu và cung cấp không gian học t… | THẤP | 0.0683 | Đúng |
-| 4 | Học phần tiên quyết phải được hoàn thành trước. | Hôm nay trời mưa rất to ở khu ký túc xá. | THẤP | 0.0467 | Đúng |
-| 5 | Sinh viên đăng ký học phần trong cổng học vụ. | Sinh viên đăng ký học phần trong cổng học vụ. | CAO (=1.0) | 1.0000 | Đúng |
+## D. Similarity cá nhân
 
-## E. Vòng đời store — size / delete_document
+| Cặp | Dự đoán | Score | Đúng? |
+|---:|---|---:|---|
+| 1 | CAO | 0.8670 | Có |
+| 2 | CAO | 0.8451 | Có |
+| 3 | CAO | 0.6158 | Có |
+| 4 | THẤP | 0.0620 | Có |
+| 5 | THẤP | 0.2119 | Có |
 
-- Số chunk ban đầu: **5**
-- `delete_document('k3-library-services')` -> `True`; còn lại **3** chunk
-- `delete_document('khong-ton-tai')` -> `False` (đúng kỳ vọng: không xóa gì)
+## E. Vòng đời store
+
+- Trước xóa: **23** chunks.
+- Xóa TB209: `True`; sau xóa: **18** chunks.
+- Xóa ID không tồn tại: `False`.
+
+## F. Failure case do thiếu dữ liệu nguồn
+
+- Câu hỏi thử lỗi: **Mức học phí cụ thể theo khối ngành trong QyĐ474 là bao nhiêu?**
+- Trang đã crawl có tiêu đề mục `I. Mức học phí theo khối ngành` nhưng bảng số tiền không xuất hiện trong phần văn bản công khai đã lấy. Vì vậy retrieval có thể tìm đúng tài liệu nhưng agent không thể tạo câu trả lời có căn cứ.
+- Cải thiện: lấy tệp đính kèm/PDF công khai nếu được phép, trích xuất bảng và giữ nguyên `source_url`; không suy đoán hoặc tự điền mức tiền.
