@@ -1,3 +1,8 @@
 doc_id,file_path,title,source_url,retrieved_at,document_version,license_or_permission
-k3-course-registration,data/k3_university/course-registration.md,Đăng ký học phần,https://example.edu/hoc-vu/dang-ky-hoc-phan,2026-08-02,2026.1,example-template-replace-me
-k3-library-services,data/k3_university/library-services.md,Dịch vụ thư viện,https://example.edu/thu-vien/dich-vu,2026-08-02,2026.1,example-template-replace-me
+course-registration,data/k3_university/course-registration.md,Quy định Đăng ký Học phần và Điều chỉnh Lịch học,https://mybk.hcmut.edu.vn,2026-08-03,2026.1,public-page
+library-services,data/k3_university/library-services.md,Quy định Sử dụng Dịch vụ Thư viện và Gia hạn Tài liệu,https://lib.hcmut.edu.vn,2026-08-03,2026.1,public-page
+scholarship-policy,data/k3_university/scholarship-policy.md,Quy chế Xét trao Học bổng Khuyến khích Học tập,https://ctsv.hcmut.edu.vn,2026-08-03,2026.1,public-page
+tuition-fee-policy,data/k3_university/tuition-fee-policy.md,Quy định Nộp Học phí và Tạm hoãn Nộp Học phí,https://student.ueh.edu.vn,2026-08-03,2026.1,public-page
+dormitory-regulations,data/k3_university/dormitory-regulations.md,Nội quy Lưu trú và Quy trình Đăng ký Ký túc xá,https://ktx.vnuhcm.edu.vn,2026-08-03,2026.1,public-page
+student-card-services,data/k3_university/student-card-services.md,Thủ tục Cấp lại Thẻ Cán bộ Sinh viên và Giấy Xác nhận,https://ctt.hust.edu.vn,2026-08-03,2026.1,public-page
+retake-and-improvement,data/k3_university/retake-and-improvement.md,Quy chế Hướng dẫn Giảng viên Nhập điểm Học lại và Cải thiện,https://daotao.ueh.edu.vn,2026-08-03,2026.1,public-page
