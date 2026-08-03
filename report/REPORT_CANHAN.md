@@ -128,33 +128,41 @@ tests/test_solution.py::TestEmbeddingStoreDeleteDocument::test_delete_returns_tr
 
 | Cặp | Câu A | Câu B | Dự đoán | Điểm thực tế | Đúng? |
 |------|-----------|-----------|---------|--------------|-------|
-| 1 | Đăng ký học phần trực tuyến | Hướng dẫn đăng ký môn học | cao | 0.89 | Đúng |
-| 2 | Quy định trả sách thư viện | Mức phạt trả sách quá hạn | cao | 0.85 | Đúng |
-| 3 | Mức nộp học phí học kỳ | Thời tiết Hà Nội hôm nay | thấp | 0.05 | Đúng |
-| 4 | Nội quy lưu trú KTX | Quy chế xét học bổng | thấp | 0.25 | Đúng |
-| 5 | Thủ tục cấp lại thẻ sinh viên | Quy trình làm lại thẻ bị mất | cao | 0.92 | Đúng |
+| 1 | Đăng ký học phần trực tuyến | Hướng dẫn đăng ký môn học | cao | **0.8756** | Đúng |
+| 2 | Quy định trả sách thư viện | Mức phạt trả sách quá hạn | cao | **0.7746** | Đúng |
+| 3 | Mức nộp học phí học kỳ | Thời tiết Hà Nội hôm nay | thấp | **0.7328** | Sai về độ lớn |
+| 4 | Nội quy lưu trú KTX | Quy chế xét học bổng | thấp | **0.5286** | Đúng tương đối |
+| 5 | Thủ tục cấp lại thẻ sinh viên | Quy trình làm lại thẻ bị mất | cao | **0.7589** | Đúng |
 
 **Kết quả nào bất ngờ nhất? Điều này nói gì về cách embeddings biểu diễn ý nghĩa?**
-> Kết quả bất ngờ nhất là các câu khác từ hoàn toàn (như "đăng ký học phần" và "đăng ký môn học") vẫn đạt Cosine Similarity rất cao (0.89). Điều này chứng minh Embedding model mã hóa ngữ nghĩa (semantic concept) thay vì chỉ so sánh từ khóa trùng lặp.
+> Kết quả bất ngờ nhất là cặp học phí/thời tiết vẫn đạt **0.7328** dù khác chủ đề. Các điểm trên được đo thật bằng `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`. Điều này cho thấy cosine score chỉ có ý nghĩa **tương đối trong cùng tập ứng viên**; score cao là tín hiệu xếp hạng, không tự chứng minh nội dung chứa đáp án.
 
 ---
 
 ## 5. Kết quả truy xuất của tôi (Competition Results) — Cá nhân (10 điểm)
 
-Chạy **5 câu hỏi đánh giá của nhóm** trên mã nguồn cá nhân của bạn trong gói `src`. **5 câu hỏi này phải trùng với các thành viên cùng nhóm** (xem `REPORT_NHOM.md`).
+Kết quả dùng corpus `data/qnu_regulations`, `SentenceChunker(max_sentences_per_chunk=3)` và model `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`. Agent benchmark chỉ trích xuất chunk hạng 1; bảng top-3 đầy đủ nằm trong `report/benchmark_raw.md`.
 
-| # | Câu hỏi (Query) | Top-1 Chunk truy xuất được (tóm tắt) | Điểm Score | Có liên quan không? (Relevant) | Câu trả lời của Agent (tóm tắt) |
-|---|-------|--------------------------------|-------|-----------|------------------------|
-| 1 | Đăng ký tín chỉ tối thiểu / tối đa | Số tín chỉ tối thiểu cho 1 học kỳ chính là 12, tối đa là 24. | 0.91 | Có | Sinh viên được đăng ký tối thiểu 12 và tối đa 24 tín chỉ. |
-| 2 | Phí phạt trả sách quá hạn | Trả sách quá hạn phạt 5.000đ / tài liệu / ngày. | 0.88 | Có | Mức phạt là 5.000 VNĐ/ngày, khóa tài khoản khi vượt 50.000 VNĐ. |
-| 3 | (Filter `audience: student`) Điều kiện học bổng Xuất sắc | GPA từ 3.60 trở lên và DRL từ 90 điểm trở lên. | 0.94 | Có | Cần GPA >= 3.60 và DRL >= 90 điểm, học bổng 120% học phí. |
-| 4 | Gia hạn nộp học phí | Thời gian gia hạn tối đa 60 ngày kể từ hạn nộp. | 0.87 | Có | Thời gian gia hạn tối đa 60 ngày, hồ sơ gồm đơn xác nhận địa phương & bảng điểm. |
-| 5 | Giờ mở/đóng cửa KTX | KTX mở cửa từ 05:00 và đóng cửa lúc 23:00 hàng ngày. | 0.93 | Có | KTX mở cửa 05:00 và đóng cửa 23:00. |
+| # | Top-3 chunk (score) | Bằng chứng/độ mạch lạc | Agent và điểm |
+|---|---|---|---|
+| 1 | TB209 (0.7437); TB1525 (0.6138); TB1525 (0.5509) | Mốc nghỉ 03 tuần, 09/02–01/03 và học lại 02/03 ở top-1 | Đủ căn cứ — **2/2** |
+| 2 | QĐ1401 (0.7936); QĐ1401 (0.7920); QĐ1401 (0.6771) | Điều 2 có hiệu lực/thay thế QĐ1455 ở top-2, không phải top-1 | Agent thiếu đáp án — **1/2** |
+| 3 | QyĐ828 (0.7749); TB1525 (0.6983); TB1525 (0.6907) | Không có chunk QyĐ474 chứa bằng chứng trong top-3 | Không grounded — **0/2** |
+| 4 | TB1525 (0.6800); TB1525 (0.6102); TB1525 (0.5943) | Mốc nộp và cổng `e-bills.vn/pay/qnu` ở top-3, nhưng không top-1 | Agent thiếu đáp án — **1/2** |
+| 5 | QyĐ828 (0.8118); TB1525 (0.7327); QyĐ474 (0.6997) | Hệ vừa làm vừa học, khóa 34, Quản lý đất đai ở top-1 | Đủ căn cứ — **2/2** |
 
-**Bao nhiêu câu hỏi trả về chunk có liên quan trong top-3?** **5** / 5
+**Kết quả cá nhân:** **6/10**; **4/5** query có chunk chứa bằng chứng trong top-3, agent trả lời đủ từ top-1 ở **2/5** query.
+
+### A/B metadata filter
+
+Q2 dùng `metadata_filter={"audience": "student"}`. Với SentenceChunker, top-3 và điểm **giống hệt** khi có/không có filter: 1/2. Query đã nêu rất rõ QĐ1401 nên các ứng viên đứng đầu vốn đều cùng văn bản; filter đúng schema nhưng không tạo lợi ích đo được trong corpus này.
+
+### Failure case cá nhân
+
+Q3 là failure rõ nhất: query hỏi QyĐ474 nhưng top-1 là QyĐ828 với score **0.7749**; cả top-3 không có chuỗi “đào tạo đại học từ xa tuyển sinh tháng 2 năm 2026”. Score cao chỉ là tín hiệu xếp hạng, không chứng minh đúng nội dung. Nguyên nhân là ba văn bản đều nói về học phí nhưng QyĐ474 thiếu bảng mức thu, làm tín hiệu ngữ nghĩa đặc trưng yếu. Đề xuất: crawl/bổ sung bảng học phí gốc, thêm `category`/`program_type` để filter đúng loại đào tạo, rồi đo lại.
 
 **Điều hay nhất tôi học được từ thành viên khác / nhóm khác (qua demo):**
-> Việc kết hợp Lọc Metadata (`audience`) trước khi thực hiện vector similarity search giúp tăng đáng kể độ chính xác của RAG, tránh trường hợp truy xuất nhầm văn bản quy định dành cho cán bộ giảng viên.
+> Chấm theo chuỗi bằng chứng trong chunk mới phát hiện được đúng/sai thật sự. Đúng `doc_id` hoặc cosine cao chưa đủ để kết luận agent có căn cứ.
 
 ---
 
@@ -166,5 +174,5 @@ Chạy **5 câu hỏi đánh giá của nhóm** trên mã nguồn cá nhân củ
 | Hướng tiếp cận của tôi (My Approach) | 10 / 10 |
 | Hoàn thiện code (Core Implementation — tests) | 30 / 30 |
 | Dự đoán độ tương tự (Similarity Predictions) | 5 / 5 |
-| Kết quả truy xuất của tôi (Competition Results) | 10 / 10 |
-| **Tổng phần cá nhân** | **60 / 60** |
+| Kết quả truy xuất của tôi (Competition Results) | 6 / 10 |
+| **Tổng phần cá nhân** | **56 / 60** |
