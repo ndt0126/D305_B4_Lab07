@@ -1,6 +1,6 @@
 # Báo Cáo Cá Nhân — Lab 7: Embedding & Vector Store
 
-**Họ tên:** Nguyễn Đức Trung
+**Họ tên:** Đinh Quang Minh
 **Nhóm:** D305_B4_Lab07
 **Ngày:** 3/8/2026
 
@@ -54,6 +54,9 @@ Giải thích cách tiếp cận của bạn khi lập trình (implement) các p
 **`RecursiveChunker.chunk` / `_split`** — hướng tiếp cận:
 > Sử dụng thuật toán đệ quy thử lần lượt các separator theo ưu tiên `["\n\n", "\n", ". ", " ", ""]`. Nếu đoạn văn vượt quá `chunk_size`, tiếp tục chia nhỏ theo separator cấp thấp hơn; trường hợp không còn separator thì cắt theo kích thước cố định `FixedSizeChunker`.
 
+**`compute_similarity` và `ChunkingStrategyComparator`** — hướng tiếp cận:
+> `compute_similarity` tính cosine bằng tích vô hướng chia cho tích hai chuẩn Euclid, đồng thời trả về `0.0` nếu một vector có độ lớn bằng 0 để tránh lỗi chia cho 0. `ChunkingStrategyComparator` chạy FixedSize, Sentence và Recursive trên cùng đầu vào, sau đó tổng hợp số chunk, độ dài trung bình và nội dung chunk để so sánh công bằng.
+
 ### Lớp EmbeddingStore
 
 **`add_documents` + `search`** — hướng tiếp cận:
@@ -65,7 +68,15 @@ Giải thích cách tiếp cận của bạn khi lập trình (implement) các p
 ### Tác tử KnowledgeBaseAgent
 
 **`answer`** — hướng tiếp cận:
-> Gọi `store.search` để lấy `top_k` chunk liên quan nhất. Gộp nội dung các chunk làm ngữ cảnh (`context`), sau đó dựng prompt đưa `context` và `question` vào rồi truyền cho `llm_fn` để sinh câu trả lời RAG.
+> Gọi `store.search` hoặc `store.search_with_filter` khi có `metadata_filter` để lấy `top_k` chunk liên quan nhất. Gộp nội dung các chunk làm ngữ cảnh (`context`), dựng prompt yêu cầu chỉ dùng context rồi truyền cho `llm_fn` để sinh câu trả lời RAG. Agent lưu `last_results` để benchmark có thể kiểm tra provenance của top-3.
+
+### Xác nhận hoàn thành Tasks 1–3
+
+| Task | Bằng chứng hoàn thành |
+|---|---|
+| Task 1 — Khởi động | Mục 1 giải thích cosine, ví dụ cao/thấp và tính toán chunking 10.000 ký tự. |
+| Task 2 — Core implementation | Đã triển khai SentenceChunker, RecursiveChunker, cosine similarity, comparator, EmbeddingStore và KnowledgeBaseAgent; `pytest tests -q` đạt 42/42. |
+| Task 3 — So sánh retrieval | Đã dùng 5 query QNU, FixedSizeChunker cá nhân, local multilingual embedding, chấm top-3 theo evidence chunk, A/B filter và failure analysis ở Mục 4–5. |
 
 ---
 
@@ -128,38 +139,38 @@ tests/test_solution.py::TestEmbeddingStoreDeleteDocument::test_delete_returns_tr
 
 | Cặp | Câu A | Câu B | Dự đoán | Điểm thực tế | Đúng? |
 |------|-----------|-----------|---------|--------------|-------|
-| 1 | Đăng ký học phần trực tuyến | Hướng dẫn đăng ký môn học | cao | **0.8756** | Đúng |
-| 2 | Quy định trả sách thư viện | Mức phạt trả sách quá hạn | cao | **0.7746** | Đúng |
-| 3 | Mức nộp học phí học kỳ | Thời tiết Hà Nội hôm nay | thấp | **0.7328** | Sai về độ lớn |
-| 4 | Nội quy lưu trú KTX | Quy chế xét học bổng | thấp | **0.5286** | Đúng tương đối |
-| 5 | Thủ tục cấp lại thẻ sinh viên | Quy trình làm lại thẻ bị mất | cao | **0.7589** | Đúng |
+| 1 | Thời gian nghỉ Tết Nguyên đán Bình Ngọ năm 2026 | Sinh viên được nghỉ Tết từ ngày nào và học lại khi nào? | cao | **0.5742** | Đúng tương đối |
+| 2 | Quy chế tuyển sinh trình độ đại học | QĐ1401 ban hành quy chế tuyển sinh đại học | cao | **0.8977** | Đúng |
+| 3 | Mức thu học phí đào tạo đại học từ xa | Dự báo thời tiết Quy Nhơn hôm nay | thấp | **0.8466** | Sai về độ lớn |
+| 4 | Học viên cao học Khóa 28B nộp học phí | Quy định tuyển sinh đại học | thấp | **0.5602** | Đúng tương đối |
+| 5 | Hệ vừa làm vừa học khóa 34 | Ngành Quản lý đất đai tuyển sinh năm 2024 | cao | **0.5196** | Đúng tương đối |
 
 **Kết quả nào bất ngờ nhất? Điều này nói gì về cách embeddings biểu diễn ý nghĩa?**
-> Kết quả bất ngờ nhất là cặp học phí/thời tiết vẫn đạt **0.7328** dù khác chủ đề. Các điểm trên được đo thật bằng `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`. Điều này cho thấy cosine score chỉ có ý nghĩa **tương đối trong cùng tập ứng viên**; score cao là tín hiệu xếp hạng, không tự chứng minh nội dung chứa đáp án.
+> Kết quả bất ngờ nhất là cặp học phí/thời tiết vẫn đạt **0.8466** dù khác chủ đề. Các điểm trên được đo thật bằng `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`. Điều này cho thấy cosine score chỉ có ý nghĩa **tương đối trong cùng tập ứng viên**; score cao là tín hiệu xếp hạng, không tự chứng minh nội dung chứa đáp án. Cặp 1 và 5 cùng chủ đề nhưng không đạt quá cao vì câu ngắn và chỉ trùng một phần điều kiện, cũng cho thấy cần đánh giá bằng chunk evidence thay vì chỉ nhìn score.
 
 ---
 
 ## 5. Kết quả truy xuất của tôi (Competition Results) — Cá nhân (10 điểm)
 
-Kết quả dùng corpus `data/qnu_regulations`, `SentenceChunker(max_sentences_per_chunk=3)` và model `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`. Agent benchmark chỉ trích xuất chunk hạng 1; bảng top-3 đầy đủ nằm trong `report/benchmark_raw.md`.
+Kết quả dùng corpus `data/qnu_regulations`, `FixedSizeChunker(chunk_size=800, overlap=150)` và model `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`. Agent benchmark chỉ trích xuất chunk hạng 1; bảng top-3 đầy đủ nằm trong `report/benchmark_raw.md`.
 
 | # | Top-3 chunk (score) | Bằng chứng/độ mạch lạc | Agent và điểm |
 |---|---|---|---|
-| 1 | TB209 (0.7437); TB1525 (0.6138); TB1525 (0.5509) | Mốc nghỉ 03 tuần, 09/02–01/03 và học lại 02/03 ở top-1 | Đủ căn cứ — **2/2** |
-| 2 | QĐ1401 (0.7936); QĐ1401 (0.7920); QĐ1401 (0.6771) | Điều 2 có hiệu lực/thay thế QĐ1455 ở top-2, không phải top-1 | Agent thiếu đáp án — **1/2** |
-| 3 | QyĐ828 (0.7749); TB1525 (0.6983); TB1525 (0.6907) | Không có chunk QyĐ474 chứa bằng chứng trong top-3 | Không grounded — **0/2** |
-| 4 | TB1525 (0.6800); TB1525 (0.6102); TB1525 (0.5943) | Mốc nộp và cổng `e-bills.vn/pay/qnu` ở top-3, nhưng không top-1 | Agent thiếu đáp án — **1/2** |
-| 5 | QyĐ828 (0.8118); TB1525 (0.7327); QyĐ474 (0.6997) | Hệ vừa làm vừa học, khóa 34, Quản lý đất đai ở top-1 | Đủ căn cứ — **2/2** |
+| 1 | TB209 (0.9038); TB209 (0.7437); TB1525 (0.6109) | Mốc nghỉ 03 tuần, 09/02–01/03 và học lại 02/03 ở top-1 | Đủ căn cứ — **2/2** |
+| 2 | QĐ1401 (0.8515); QĐ1401 (0.7936); QyĐ474 (0.6847) | Điều 2 có hiệu lực/thay thế QĐ1455 ở top-1 | Đủ căn cứ — **2/2** |
+| 3 | QyĐ828 (0.7749); QĐ1401 (0.7069); QyĐ474 (0.6741) | Chunk QyĐ474 có evidence ở top-3 (rank 3), không phải top-1 | Agent thiếu căn cứ — **1/2** |
+| 4 | TB1525 (0.6157); TB1525 (0.6102); QyĐ474 (0.5908) | Không có chunk giữ đồng thời mốc nộp và cổng thanh toán trong top-3 | Không grounded — **0/2** |
+| 5 | QyĐ828 (0.8118); TB1525 (0.7427); QyĐ474 (0.7263) | Top-1 có nội dung gần đáp án nhưng không có chuỗi evidence đã khai báo; không tính là evidence theo rubric | Không grounded theo evidence marker — **0/2** |
 
-**Kết quả cá nhân:** **6/10**; **4/5** query có chunk chứa bằng chứng trong top-3, agent trả lời đủ từ top-1 ở **2/5** query.
+**Kết quả cá nhân:** **5/10**; **3/5** query có chunk chứa bằng chứng trong top-3, agent trả lời đủ từ top-1 ở **2/5** query.
 
 ### A/B metadata filter
 
-Q2 dùng `metadata_filter={"audience": "student"}`. Với SentenceChunker, top-3 và điểm **giống hệt** khi có/không có filter: 1/2. Query đã nêu rất rõ QĐ1401 nên các ứng viên đứng đầu vốn đều cùng văn bản; filter đúng schema nhưng không tạo lợi ích đo được trong corpus này.
+Q2 dùng `metadata_filter={"audience": "student"}`. Với FixedSizeChunker, top-3 và điểm **giống hệt** khi có/không có filter: 2/2. Query đã nêu rất rõ QĐ1401 nên ứng viên đứng đầu vốn đã là tài liệu phù hợp; filter đúng schema nhưng không tạo lợi ích đo được trong corpus này.
 
 ### Failure case cá nhân
 
-Q3 là failure rõ nhất: query hỏi QyĐ474 nhưng top-1 là QyĐ828 với score **0.7749**; cả top-3 không có chuỗi “đào tạo đại học từ xa tuyển sinh tháng 2 năm 2026”. Score cao chỉ là tín hiệu xếp hạng, không chứng minh đúng nội dung. Nguyên nhân là ba văn bản đều nói về học phí nhưng QyĐ474 thiếu bảng mức thu, làm tín hiệu ngữ nghĩa đặc trưng yếu. Đề xuất: crawl/bổ sung bảng học phí gốc, thêm `category`/`program_type` để filter đúng loại đào tạo, rồi đo lại.
+Q4 là failure rõ nhất: cả top-3 đều nói về học phí hoặc học viên cao học, nhưng không chunk nào giữ đồng thời mốc nộp `15/5/2026–02/8/2026` và cổng `e-bills.vn/pay/qnu`, nên đạt **0/2**. Top-1 TB1525 có score **0.6157** nhưng chỉ chứa hướng dẫn thanh toán, thiếu thời hạn. Đây là lỗi coherence: FixedSize cắt tách hai phần đáp án. Đề xuất: tăng overlap, giảm `chunk_size`, hoặc dùng chunking theo heading/đoạn cho thông báo TB1525 rồi benchmark lại.
 
 **Điều hay nhất tôi học được từ thành viên khác / nhóm khác (qua demo):**
 > Chấm theo chuỗi bằng chứng trong chunk mới phát hiện được đúng/sai thật sự. Đúng `doc_id` hoặc cosine cao chưa đủ để kết luận agent có căn cứ.
@@ -174,5 +185,5 @@ Q3 là failure rõ nhất: query hỏi QyĐ474 nhưng top-1 là QyĐ828 với sc
 | Hướng tiếp cận của tôi (My Approach) | 10 / 10 |
 | Hoàn thiện code (Core Implementation — tests) | 30 / 30 |
 | Dự đoán độ tương tự (Similarity Predictions) | 5 / 5 |
-| Kết quả truy xuất của tôi (Competition Results) | 6 / 10 |
-| **Tổng phần cá nhân** | **56 / 60** |
+| Kết quả truy xuất của tôi (Competition Results) | 5 / 10 |
+| **Tổng phần cá nhân** | **55 / 60** |
