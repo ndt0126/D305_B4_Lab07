@@ -15,32 +15,31 @@
 ### Độ tương tự Cosine (Cosine Similarity) (Bài tập 1.1)
 
 **Độ tương tự cosine cao (High cosine similarity) nghĩa là gì?**
-> *Viết 1-2 câu:*
+> Cosine similarity cao cho thấy hai vector embedding có hướng gần nhau. Vì embedding mã hóa nội dung thành vector, điều này thường phản ánh hai đoạn văn có ý nghĩa hoặc chủ đề tương tự.
 
 **Ví dụ có độ tương tự CAO:**
-- Câu A:
-- Câu B:
-- Tại sao tương đồng:
+- Câu A: Sinh viên có thể gia hạn sách tại thư viện.
+- Câu B: Người học được phép kéo dài thời hạn mượn sách.
+- Tại sao tương đồng: Cả hai câu đều nói về việc gia hạn thời gian mượn sách, chỉ khác cách diễn đạt.
 
 **Ví dụ có độ tương tự THẤP:**
-- Câu A:
-- Câu B:
-- Tại sao khác:
+- Câu A: Sinh viên có thể gia hạn sách tại thư viện.
+- Câu B: Hôm nay trời mưa rất lớn.
+- Tại sao khác: Hai câu đề cập đến hai chủ đề không liên quan nên vector biểu diễn của chúng sẽ có hướng khác nhau.
 
 **Tại sao độ tương tự cosine (cosine similarity) được ưu tiên hơn khoảng cách Euclid (Euclidean distance) cho text embeddings?**
-> *Viết 1-2 câu:*
+> Cosine similarity so sánh góc giữa các vector, vì vậy chú trọng vào hướng biểu diễn ý nghĩa thay vì độ lớn của vector. Đây là đặc điểm phù hợp với text embedding, nơi hai văn bản cùng nghĩa có thể có độ lớn vector khác nhau.
 
 ### Bài toán tính toán Chunking (Bài tập 1.2)
 
 **Tài liệu 10,000 ký tự, chunk_size=500, overlap=50. Bao nhiêu chunks?**
-> *Trình bày phép tính:*
-> *Đáp án:*
+> *Trình bày phép tính:* ceil((10000 - 50) / (500 - 50)) = ceil(9950 / 450) = 23.
+> *Đáp án:* 23 chunks.
 
 **Nếu độ chồng chéo (overlap) tăng lên 100, số lượng chunk thay đổi thế nào? Tại sao muốn độ chồng chéo nhiều hơn?**
-> *Viết 1-2 câu:*
+> Với overlap = 100, số chunk là ceil((10000 - 100) / (500 - 100)) = ceil(9900 / 400) = 25 chunks. Overlap lớn hơn giúp giữ được ngữ cảnh tại ranh giới giữa các chunk, nhưng cũng làm tăng phần nội dung lặp lại và chi phí lưu trữ, tìm kiếm.
 
 ---
-
 ## 2. Hướng tiếp cận của tôi (My Approach) — Cá nhân (10 điểm)
 
 Giải thích cách tiếp cận của bạn khi lập trình (implement) các phần chính trong gói `src`.

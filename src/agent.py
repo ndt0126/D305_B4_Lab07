@@ -14,9 +14,20 @@ class KnowledgeBaseAgent:
     """
 
     def __init__(self, store: EmbeddingStore, llm_fn: Callable[[str], str]) -> None:
-        # TODO: store references to store and llm_fn
-        pass
+        self.store = store
+        self.llm_fn = llm_fn
 
     def answer(self, question: str, top_k: int = 3) -> str:
-        # TODO: retrieve chunks, build prompt, call llm_fn
-        raise NotImplementedError("Implement KnowledgeBaseAgent.answer")
+        results = self.store.search(question, top_k=top_k)
+        context = "\n\n".join(result["content"] for result in results)
+        if not context:
+            context = "Không tìm thấy ngữ cảnh liên quan trong cơ sở tri thức."
+
+        prompt = (
+            "Hãy trả lời câu hỏi chỉ dựa trên ngữ cảnh được cung cấp. "
+            "Nếu ngữ cảnh không đủ thông tin, hãy nói rõ rằng bạn không biết.\n\n"
+            f"Ngữ cảnh:\n{context}\n\n"
+            f"Câu hỏi: {question}\n"
+            "Trả lời:"
+        )
+        return self.llm_fn(prompt)
