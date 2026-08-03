@@ -12,31 +12,6 @@ language: "vi"
 
 # QyĐ828 - Về mức thu học phí năm học 2024-2025 đối với hệ đào tạo vừa làm vừa học tổ chức tại Trường áp dụng cho khóa 34 ngành Quản lý đát đai tuyển sinh năm 2024
 
-QyĐ828 - Về mức thu học phí năm học 2024-2025 đối với hệ đào tạo vừa làm vừa học tổ chức tại Trường áp dụng cho khóa 34 ngành Quản lý đát đai tuyển sinh năm 2024
-
-{1}
-
-##LOC[OK]##
-
-{1}
-
-##LOC[OK]##
-##LOC[Cancel]##
-
-{1}
-
-##LOC[OK]##
-##LOC[Cancel]##
-
-02
-Th03
-
-QyĐ828 - Về mức thu học phí năm học 2024-2025 đối với hệ đào tạo vừa làm vừa học tổ chức tại Trường áp dụng cho khóa 34 ngành Quản lý đát đai tuyển sinh năm 2024
-
-11:42:40
-
-|
-
 Số: 828/QyĐ-ĐHQN
 
 Quy định về mức thu học phí năm học 2024-2025 đối với hệ đào tạo vừa làm vừa học tổ chức tại Trường áp dụng cho khóa 34 ngành Quản lý đất đai tuyển sinh năm 2024
@@ -68,59 +43,3 @@ Quy định này có hiệu lực từ năm học 2024-2025 đôi với đào t�
 Đăng nhập và xem trên E-Office 2.0:
 
 https://eoffice.qnu.edu.vn/app/view-document?xuLyId=b256e726-e168-466b-b98c-7c3d9cc1d01c
-
-Từ khóa:
-
-Góp ý
-
-×
-Thành công!
-Cám ơn bạn!!
-
-Tên đăng nhập không được trống
-
-Email không hợp lệ
-
-Nhập vào tiêu đề.
-
-Nhập vào nội dung.
-
-Captcha
-
-1gh1JD
-
-Gửi
-
-Hủy
-
-LỊCH LÀM VIỆC HÔM NAY
-
-{{getTimePart(dt.NgayGioBD)}}
-
-{{dt.NoiDung}}
-
-Điạ điểm :{{dt.DiaDiem}}
-
-Các tin khác 
-
-CV2315 - Về việc báo cáo định kỳ tình hình thực hiện nhiệm vụ KH&CN cấp bộ năm 2026
-
-31/07/2026
-
-TB2338 - Về việc tuyển dụng lao động theo hình thức hợp đồng lao động xác định thời hạn đợt 4 năm 2026
-
-31/07/2026
-
-TB2325 - Về thời gian đào tạo tối đa trình độ thạc sĩ của các khoá 25AB, 26AB và 27A
-
-31/07/2026
-
-TB2292 - Về việc tuyển dụng lao động theo hình thức hợp đồng lao động xác định thời hạn đợt 3 năm 2026
-
-23/07/2026
-
-Page Title
-
-×
-
-Some text in the modal.
