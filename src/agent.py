@@ -13,10 +13,49 @@ class KnowledgeBaseAgent:
         3. Call the LLM to generate an answer.
     """
 
+    PROMPT_TEMPLATE = (
+        "Bạn là trợ lý tra cứu quy định/dịch vụ đại học.\n"
+        "Chỉ trả lời DỰA TRÊN ngữ cảnh được cung cấp bên dưới.\n"
+        "Nếu ngữ cảnh không đủ thông tin, hãy nói rõ là không tìm thấy trong tài liệu.\n"
+        "Khi trả lời, trích dẫn số hiệu nguồn dạng [1], [2]... để người đọc truy vết được.\n\n"
+        "--- NGỮ CẢNH ---\n"
+        "{context}\n"
+        "--- HẾT NGỮ CẢNH ---\n\n"
+        "Câu hỏi: {question}\n"
+        "Trả lời:"
+    )
+
+    NO_CONTEXT = "(Không truy xuất được đoạn tài liệu nào liên quan.)"
+
     def __init__(self, store: EmbeddingStore, llm_fn: Callable[[str], str]) -> None:
-        # TODO: store references to store and llm_fn
-        pass
+        self.store = store
+        self.llm_fn = llm_fn
+        self.last_results: list[dict] = []  # giữ lại để truy vết/đánh giá grounding
+
+    def build_context(self, results: list[dict]) -> str:
+        """Ghép các chunk truy xuất được thành khối ngữ cảnh có đánh số + nguồn."""
+        if not results:
+            return self.NO_CONTEXT
+
+        blocks = []
+        for index, result in enumerate(results, start=1):
+            metadata = result.get("metadata", {}) or {}
+            source = metadata.get("source_url") or metadata.get("source") or metadata.get("doc_id") or "unknown"
+            score = result.get("score", 0.0)
+            blocks.append(
+                f"[{index}] (nguồn: {source} | score={score:.3f})\n{result.get('content', '').strip()}"
+            )
+        return "\n\n".join(blocks)
 
     def answer(self, question: str, top_k: int = 3) -> str:
-        # TODO: retrieve chunks, build prompt, call llm_fn
-        raise NotImplementedError("Implement KnowledgeBaseAgent.answer")
+        """Truy xuất top-k chunk -> dựng prompt có ngữ cảnh -> gọi LLM."""
+        results = self.store.search(question, top_k=top_k)
+        self.last_results = results
+
+        prompt = self.PROMPT_TEMPLATE.format(
+            context=self.build_context(results),
+            question=question,
+        )
+
+        answer = self.llm_fn(prompt)
+        return answer if isinstance(answer, str) else str(answer)
