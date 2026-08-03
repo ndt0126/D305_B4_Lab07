@@ -12,31 +12,6 @@ language: "vi"
 
 # QĐ1401 - Ban hành Quy chế tuyển sinh trình độ đại học
 
-QĐ1401 - Ban hành Quy chế tuyển sinh trình độ đại học 
-
-{1}
-
-##LOC[OK]##
-
-{1}
-
-##LOC[OK]##
-##LOC[Cancel]##
-
-{1}
-
-##LOC[OK]##
-##LOC[Cancel]##
-
-19
-Th05
-
-QĐ1401 - Ban hành Quy chế tuyển sinh trình độ đại học 
-
-08:15:26
-
-|
-
 Số: 1401/QĐ - ĐHQN
 
 Ban hành Quy chế tuyển sinh trình độ đại học 
@@ -69,60 +44,4 @@ QUYẾT ĐỊNH: 
 
  
 
-Quy chế tuyển sinh trình độ đại học 
-
-Từ khóa:
-
-Góp ý
-
-×
-Thành công!
-Cám ơn bạn!!
-
-Tên đăng nhập không được trống
-
-Email không hợp lệ
-
-Nhập vào tiêu đề.
-
-Nhập vào nội dung.
-
-Captcha
-
-BTyx2w
-
-Gửi
-
-Hủy
-
-LỊCH LÀM VIỆC HÔM NAY
-
-{{getTimePart(dt.NgayGioBD)}}
-
-{{dt.NoiDung}}
-
-Điạ điểm :{{dt.DiaDiem}}
-
-Các tin khác 
-
-CV2315 - Về việc báo cáo định kỳ tình hình thực hiện nhiệm vụ KH&CN cấp bộ năm 2026
-
-31/07/2026
-
-TB2338 - Về việc tuyển dụng lao động theo hình thức hợp đồng lao động xác định thời hạn đợt 4 năm 2026
-
-31/07/2026
-
-TB2325 - Về thời gian đào tạo tối đa trình độ thạc sĩ của các khoá 25AB, 26AB và 27A
-
-31/07/2026
-
-TB2292 - Về việc tuyển dụng lao động theo hình thức hợp đồng lao động xác định thời hạn đợt 3 năm 2026
-
-23/07/2026
-
-Page Title
-
-×
-
-Some text in the modal.
+Quy chế tuyển sinh trình độ đại học

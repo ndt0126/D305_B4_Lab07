@@ -12,31 +12,6 @@ language: "vi"
 
 # TB1525 - Về thời gian học tập và nộp học phí Học kỳ 2 (Đợt 2) đối với học viên cao học Khóa 28B (12/2025-2027)
 
-TB1525 - Về thời gian học tập và nộp học phí Học kỳ 2 (Đợt 2) đối với học viên cao học Khóa 28B (12/2025-2027)
-
-{1}
-
-##LOC[OK]##
-
-{1}
-
-##LOC[OK]##
-##LOC[Cancel]##
-
-{1}
-
-##LOC[OK]##
-##LOC[Cancel]##
-
-15
-Th04
-
-TB1525 - Về thời gian học tập và nộp học phí Học kỳ 2 (Đợt 2) đối với học viên cao học Khóa 28B (12/2025-2027)
-
-10:53:11
-
-|
-
 Số: 1525/TB-ĐHQN 
 
 Về thời gian học tập và nộp học phí Học kỳ 2 (Đợt 2) đối với học viên cao học
@@ -85,61 +60,3 @@ Trường Đại học Quy Nhơn thông báo để Quý cơ quan biết và tạ
  
 
 Đăng nhập và xem trên E-Office 2.0: https://eoffice.qnu.edu.vn/app/view-document?xuLyId=abf155dd-6174-43ad-bfad-f692e5e36466
-
- 
-
-Từ khóa:
-
-Góp ý
-
-×
-Thành công!
-Cám ơn bạn!!
-
-Tên đăng nhập không được trống
-
-Email không hợp lệ
-
-Nhập vào tiêu đề.
-
-Nhập vào nội dung.
-
-Captcha
-
-ZqIDrm
-
-Gửi
-
-Hủy
-
-LỊCH LÀM VIỆC HÔM NAY
-
-{{getTimePart(dt.NgayGioBD)}}
-
-{{dt.NoiDung}}
-
-Điạ điểm :{{dt.DiaDiem}}
-
-Các tin khác 
-
-TB1661 - Về việc thu tiền học phí sinh viên đại học chính quy học kỳ II năm học 2025-2026
-
-21/04/2026
-
-QĐ2327 - Về mức thu tiền ở Ký túc xá năm học 2025-2026
-
-21/08/2025
-
-TB2569 - Về mức thu tiền Ký túc xá năm học 2025-2026
-
-21/08/2025
-
-QĐ2333 - Về việc các mức thu tại Trung tâm Giáo dục Quốc phòng và An ninh Trường Đại học Quy Nhơn năm học 2025-2026
-
-20/08/2025
-
-Page Title
-
-×
-
-Some text in the modal.

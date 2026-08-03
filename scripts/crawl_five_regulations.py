@@ -84,6 +84,10 @@ class PageText(HTMLParser):
         content = re.sub(r"[ \t]+", " ", content)
         content = re.sub(r"\n[ \t]+", "\n", content)
         content = re.sub(r"\n{3,}", "\n\n", content).strip()
+        document_start = re.search(r"(?:^|\n)Số\s*(?:/\s*ký hiệu)?\s*:", content, flags=re.IGNORECASE)
+        if document_start:
+            content = content[document_start.start():].lstrip()
+        content = content.split("\nTừ khóa:", 1)[0].rstrip()
         return title, content
 
 

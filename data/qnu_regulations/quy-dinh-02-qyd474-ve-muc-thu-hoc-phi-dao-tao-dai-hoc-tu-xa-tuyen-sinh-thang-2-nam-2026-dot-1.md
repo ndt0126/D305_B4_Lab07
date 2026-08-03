@@ -12,31 +12,6 @@ language: "vi"
 
 # QyĐ474 - Về mức thu học phí đào tạo đại học từ xa tuyền sinh tháng 2 năm 2026 (Đợt 1)
 
-QyĐ474 - Về mức thu học phí đào tạo đại học từ xa tuyền sinh tháng 2 năm 2026 (Đợt 1)
-
-{1}
-
-##LOC[OK]##
-
-{1}
-
-##LOC[OK]##
-##LOC[Cancel]##
-
-{1}
-
-##LOC[OK]##
-##LOC[Cancel]##
-
-07
-Th02
-
-QyĐ474 - Về mức thu học phí đào tạo đại học từ xa tuyền sinh tháng 2 năm 2026 (Đợt 1)
-
-10:11:33
-
-|
-
 Số: 474/QyĐ-ĐHQN
 
 Về mức thu học phí đào tạo đại học từ xa tuyền sinh tháng 2 năm 2026 (Đợt 1)
@@ -76,59 +51,3 @@ Quy định này có hiệu lực kể từ ngày ký và áp dụng đổi vớ
 Đăng nhập và xem trên E-Office 2.0:
 
 https://eoffice.qnu.edu.vn/app/view-document?xuLyId=f3e26856-e5bd-4808-9a3a-f46a0732a23e
-
-Từ khóa:
-
-Góp ý
-
-×
-Thành công!
-Cám ơn bạn!!
-
-Tên đăng nhập không được trống
-
-Email không hợp lệ
-
-Nhập vào tiêu đề.
-
-Nhập vào nội dung.
-
-Captcha
-
-fclQmk
-
-Gửi
-
-Hủy
-
-LỊCH LÀM VIỆC HÔM NAY
-
-{{getTimePart(dt.NgayGioBD)}}
-
-{{dt.NoiDung}}
-
-Điạ điểm :{{dt.DiaDiem}}
-
-Các tin khác 
-
-CV2315 - Về việc báo cáo định kỳ tình hình thực hiện nhiệm vụ KH&CN cấp bộ năm 2026
-
-31/07/2026
-
-TB2338 - Về việc tuyển dụng lao động theo hình thức hợp đồng lao động xác định thời hạn đợt 4 năm 2026
-
-31/07/2026
-
-TB2325 - Về thời gian đào tạo tối đa trình độ thạc sĩ của các khoá 25AB, 26AB và 27A
-
-31/07/2026
-
-TB2292 - Về việc tuyển dụng lao động theo hình thức hợp đồng lao động xác định thời hạn đợt 3 năm 2026
-
-23/07/2026
-
-Page Title
-
-×
-
-Some text in the modal.
