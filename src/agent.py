@@ -19,12 +19,22 @@ class KnowledgeBaseAgent:
 
     def answer(self, question: str, top_k: int = 3) -> str:
         results = self.store.search(question, top_k=top_k)
-        context_parts = [r["content"] for r in results]
-        context = "\n---\n".join(context_parts)
+        if not results:
+            return "Không tìm thấy thông tin phù hợp trong kho tri thức."
+
+        context_parts = []
+        for idx, r in enumerate(results, start=1):
+            doc_id = r.get("metadata", {}).get("doc_id", r.get("id", "doc"))
+            content = r.get("content", "")
+            context_parts.append(f"[{idx}] (doc_id: {doc_id}): {content}")
+
+        context = "\n\n".join(context_parts)
 
         prompt = (
-            f"Context information:\n{context}\n\n"
-            f"Question: {question}\n"
+            f"Instruction: Chỉ sử dụng thông tin trong ngữ cảnh dưới đây để trả lời câu hỏi. "
+            f"Nếu ngữ cảnh không đủ thông tin, hãy nêu rõ.\n\n"
+            f"Context:\n{context}\n\n"
+            f"Question: {question}\n\n"
             f"Answer:"
         )
 
