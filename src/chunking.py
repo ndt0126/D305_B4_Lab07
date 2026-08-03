@@ -164,3 +164,30 @@ class ChunkingStrategyComparator:
                 "chunks": chunks,
             }
         return comparison
+
+
+class HeadingChunker:
+    """Split text into sections based on markdown headings."""
+
+    def __init__(self, min_level: int = 1, max_level: int = 3) -> None:
+        self.min_level = min_level
+        self.max_level = max_level
+
+    def chunk(self, text: str) -> list[str]:
+        if not text:
+            return []
+        pattern = r"(?m)^(#{%d,%d}\s+.*)$" % (self.min_level, self.max_level)
+        parts = re.split(pattern, text)
+        chunks = []
+        if parts[0].strip():
+            chunks.append(parts[0].strip())
+        for i in range(1, len(parts), 2):
+            heading = parts[i]
+            body = parts[i + 1] if i + 1 < len(parts) else ""
+            section = (heading + body).strip()
+            if section:
+                chunks.append(section)
+        if not chunks and text.strip():
+            chunks.append(text.strip())
+        return chunks
+
