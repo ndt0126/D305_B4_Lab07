@@ -1,15 +1,12 @@
 """
-bench.py — Script chạy benchmark 5 câu hỏi đánh giá với chiến lược retrieval riêng.
-
-Chạy lệnh:
-    python bench.py
+bench.py — Script chạy benchmark 5 câu hỏi đánh giá với bộ dữ liệu data/qnu_regulations
 """
 import os
 from pathlib import Path
 from dotenv import load_dotenv
 
 from ingest import build_knowledge_base
-from src.chunking import SentenceChunker, FixedSizeChunker, RecursiveChunker
+from src.chunking import SentenceChunker
 from src.embeddings import _mock_embed, LocalEmbedder
 from src.agent import KnowledgeBaseAgent
 
@@ -27,53 +24,53 @@ def get_embedder():
 
 def run_benchmark():
     embedding_fn = get_embedder()
-    data_dir = "data/k3_university"
+    data_dir = "data/qnu_regulations"
     
-    # 1. Chọn chiến lược chunker cá nhân (Ví dụ: SentenceChunker với max_sentences_per_chunk=3)
     chunker = SentenceChunker(max_sentences_per_chunk=3)
     strategy_name = f"{chunker.__class__.__name__}(max_sentences={getattr(chunker, 'max_sentences_per_chunk', 3)})"
     
     print(f"==================================================")
     print(f"=== BENCHMARK STRATEGY: {strategy_name} ===")
+    print(f"=== DATASET: {data_dir} ===")
     print(f"==================================================")
     
-    # 2. Nạp toàn bộ kho dữ liệu
     store = build_knowledge_base(data_dir, embedding_fn, chunker=chunker)
     total_chunks = store.get_collection_size()
     print(f"--> Đã nạp thành công {total_chunks} chunks vào EmbeddingStore từ '{data_dir}'\n")
     
-    # 3. Danh sách 5 Benchmark Queries thống nhất của nhóm
     queries = [
         {
             "id": 1,
-            "query": "Sinh viên được đăng ký tối thiểu và tối đa bao nhiêu tín chỉ trong một học kỳ chính?",
+            "query": "Sinh viên được nghỉ Tết Nguyên đán Bính Ngọ năm 2026 trong thời gian bao lâu và bắt đầu từ ngày nào?",
             "filter": None,
         },
         {
             "id": 2,
-            "query": "Phí phạt khi trả sách thư viện quá hạn là bao nhiêu và khi nào tài khoản bị khóa?",
+            "query": "Quy chế tuyển sinh trình độ đại học của Trường Đại học Quy Nhơn ban hành kèm theo quyết định số bao nhiêu?",
             "filter": None,
         },
         {
             "id": 3,
-            "query": "Điều kiện về GPA và điểm rèn luyện để đạt học bổng Khuyến khích loại Xuất sắc là gì?",
+            "query": "Mức thu học phí đào tạo đại học từ xa tuyển sinh đợt 1 tháng 2 năm 2026 là bao nhiêu?",
             "filter": {"audience": "student"},
         },
         {
             "id": 4,
-            "query": "Thời gian xin gia hạn nộp học phí tối đa là bao lâu và cần những hồ sơ gì?",
+            "query": "Thời gian học tập và nộp học phí Học kỳ 2 đợt 2 đối với học viên cao học Khóa 28B quy định thế nào?",
             "filter": None,
         },
         {
             "id": 5,
-            "query": "Ký túc xá mở cửa và đóng cửa vào khung giờ nào hàng ngày?",
+            "query": "Mức thu học phí ngành Quản lý đất đai khóa 34 tuyển sinh năm 2024 áp dụng cho hệ đào tạo nào?",
             "filter": None,
         },
     ]
 
-    agent = KnowledgeBaseAgent(store=store, llm_fn=lambda prompt: "Dựa trên ngữ cảnh: " + prompt.split("Context:\n")[1].split("\n\nQuestion:")[0].replace("\n", " ")[:200] + "...")
+    agent = KnowledgeBaseAgent(
+        store=store, 
+        llm_fn=lambda prompt: "Dựa trên ngữ cảnh: " + prompt.split("Context:\n")[1].split("\n\nQuestion:")[0].replace("\n", " ")[:200] + "..."
+    )
 
-    # 4. Thực thi từng Query và in kết quả Top-3
     for q in queries:
         qid = q["id"]
         query_text = q["query"]
