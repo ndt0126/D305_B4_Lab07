@@ -22,6 +22,7 @@ from .store import EmbeddingStore
 __all__ = [
     "Document",
     "FixedSizeChunker",
+    "HeadingChunker",
     "SentenceChunker",
     "RecursiveChunker",
     "HeadingChunker",

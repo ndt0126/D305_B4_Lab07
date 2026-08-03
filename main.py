@@ -17,9 +17,9 @@ from src.embeddings import (
     _mock_embed,
 )
 
-# Thư mục dữ liệu mặc định cho demo = bộ khởi động cố định của lớp K3.
+# Thư mục dữ liệu mặc định cho demo = corpus quy định QNU đã thu thập.
 # Đổi bằng biến môi trường: LAB_DATA_DIR=data/<thu-muc-cua-nhom> python3 main.py
-DEFAULT_DATA_DIR = "data/k3_university"
+DEFAULT_DATA_DIR = "data/qnu_regulations"
 
 
 def _select_embedder():

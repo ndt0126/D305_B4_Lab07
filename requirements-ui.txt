@@ -1,0 +1,2 @@
+-r requirements-local.txt
+streamlit==1.51.0
