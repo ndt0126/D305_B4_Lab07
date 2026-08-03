@@ -123,57 +123,6 @@ class RecursiveChunker:
         return chunks
 
 
-class HeadingChunker:
-    """Split Markdown documents by heading/section boundaries.
-
-    Each returned chunk keeps its section heading. Oversized sections are
-    delegated to ``RecursiveChunker`` so the strategy remains usable when one
-    section contains several long paragraphs.
-    """
-
-    _HEADING = re.compile(r"^#{1,6}\s+.+$", re.MULTILINE)
-
-    def __init__(self, max_chars: int = 600) -> None:
-        self.max_chars = max(1, max_chars)
-
-    def chunk(self, text: str) -> list[str]:
-        if not text or not text.strip():
-            return []
-
-        matches = list(self._HEADING.finditer(text))
-        if not matches:
-            return RecursiveChunker(chunk_size=self.max_chars).chunk(text)
-
-        sections: list[str] = []
-        preamble = text[: matches[0].start()].strip()
-        if preamble:
-            sections.append(preamble)
-
-        for index, match in enumerate(matches):
-            end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
-            section = text[match.start() : end].strip()
-            if section:
-                sections.append(section)
-
-        chunks: list[str] = []
-        splitter = RecursiveChunker(chunk_size=self.max_chars)
-        for section in sections:
-            if len(section) <= self.max_chars:
-                chunks.append(section)
-                continue
-
-            heading = section.splitlines()[0].strip() if section.startswith("#") else ""
-            for piece in splitter.chunk(section):
-                piece = piece.strip()
-                if not piece:
-                    continue
-                if heading and not piece.startswith(heading):
-                    piece = f"{heading}\n{piece}"
-                chunks.append(piece)
-
-        return chunks
-
-
 def _dot(a: list[float], b: list[float]) -> float:
     return sum(x * y for x, y in zip(a, b))
 

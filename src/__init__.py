@@ -25,7 +25,6 @@ __all__ = [
     "HeadingChunker",
     "SentenceChunker",
     "RecursiveChunker",
-    "HeadingChunker",
     "ChunkingStrategyComparator",
     "compute_similarity",
     "EmbeddingStore",
