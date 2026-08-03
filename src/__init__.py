@@ -22,9 +22,9 @@ from .store import EmbeddingStore
 __all__ = [
     "Document",
     "FixedSizeChunker",
-    "HeadingChunker",
     "SentenceChunker",
     "RecursiveChunker",
+    "HeadingChunker",
     "ChunkingStrategyComparator",
     "compute_similarity",
     "EmbeddingStore",
